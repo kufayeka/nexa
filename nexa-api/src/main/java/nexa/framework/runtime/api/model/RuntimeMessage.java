@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public final class RuntimeMessage {
+public class RuntimeMessage {
 
     private final ConcurrentMap<String, Object> values;
 
@@ -24,7 +24,7 @@ public final class RuntimeMessage {
         }
     }
 
-    private RuntimeMessage(ConcurrentMap<String, Object> values, boolean copyValues) {
+    protected RuntimeMessage(ConcurrentMap<String, Object> values, boolean copyValues) {
         this.values = copyValues ? new ConcurrentHashMap<>() : values;
         if (copyValues) {
             putAll(values);
