@@ -1,0 +1,56 @@
+{
+    "id": "workspace-main",
+    "enabled": true,
+    "flows": [
+        {
+            "id": "flow-manual-basic",
+            "name": "Manual Basic Flow",
+            "enabled": true,
+            "nodes": [
+                {
+                    "id": "input-manual-1",
+                    "category": "INPUT",
+                    "type": "timed-trigger",
+                    "enabled": true,
+                    "inputPolicy": {
+                        "maxConcurrentExecutions": 1
+                    },
+                    "config": {
+                        "interval": "1s",
+                        "payload": {
+                            "source": "timer-basic"
+                        }
+                    }
+                },
+                {
+                    "id": "exec-transform-1",
+                    "category": "EXECUTOR",
+                    "type": "script",
+                    "language": "nexa",
+                    "enabled": true,
+                    "config": {
+                        "code": "val jobs = [\n    { code: \"WO-1\", good: 10 },\n    { code: \"WO-2\", good: 0 },\n    { code: \"WO-3\", good: 7 }\n]\n\nval now = DateTime.now().toISOString()\nval active = jobs.filter(fun (job) => job.good > 0)\nval labels = active.map(fun (job) => `${job.code}:${job.good}`)\n\nmsg.payload = {\n    now,\n    activeCount: active.length,\n    labels: labels\n}\n\nsend(msg)"
+                    }
+                },
+                {
+                    "id": "output-debug-1",
+                    "category": "OUTPUT",
+                    "type": "debug-output",
+                    "enabled": true
+                }
+            ],
+            "connections": [
+                {
+                    "sourceNodeId": "input-manual-1",
+                    "sourcePort": "default",
+                    "targetNodeId": "exec-transform-1"
+                },
+                {
+                    "sourceNodeId": "exec-transform-1",
+                    "sourcePort": "default",
+                    "targetNodeId": "output-debug-1"
+                }
+            ]
+        }
+    ]
+}
