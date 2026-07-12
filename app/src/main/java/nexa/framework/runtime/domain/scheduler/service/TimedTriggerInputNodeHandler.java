@@ -7,7 +7,7 @@ import nexa.framework.runtime.domain.scheduler.api.InputNodeActivationPort;
 
 import nexa.framework.runtime.domain.deployment.model.CompiledNode;
 import nexa.framework.runtime.domain.deployment.exception.ValidationException;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.scheduler.helpers.DurationParser;
 
 import java.time.Duration;

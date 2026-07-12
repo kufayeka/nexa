@@ -1,6 +1,6 @@
-package nexa.framework.runtime.domain.execution.model;
+package nexa.framework.runtime.api.model;
 
-import nexa.framework.runtime.domain.execution.helpers.DeepCopyUtil;
+import nexa.framework.runtime.api.helpers.DeepCopyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -209,5 +209,3 @@ public final class RuntimeMessage {
         INSTANCE
     }
 }
-
-

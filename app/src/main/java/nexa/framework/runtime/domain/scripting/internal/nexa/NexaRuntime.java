@@ -2,11 +2,11 @@ package nexa.framework.runtime.domain.scripting.internal.nexa;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.scripting.model.DefaultScriptExecutionResult;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionControl;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionResult;
-import nexa.framework.runtime.domain.execution.helpers.DeepCopyUtil;
+import nexa.framework.runtime.api.helpers.DeepCopyUtil;
 
 import java.time.Instant;
 import java.time.LocalDate;

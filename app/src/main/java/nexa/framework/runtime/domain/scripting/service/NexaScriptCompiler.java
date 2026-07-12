@@ -9,6 +9,7 @@ import nexa.framework.runtime.domain.scripting.internal.nexa.NexaParser;
 import nexa.framework.runtime.domain.scripting.internal.nexa.NexaProgram;
 import nexa.framework.runtime.domain.scripting.internal.nexa.NexaScriptException;
 import nexa.framework.runtime.domain.scripting.internal.nexa.NexaTokenizer;
+import java.util.Map;
 
 public final class NexaScriptCompiler implements ScriptCompiler {
 
@@ -21,6 +22,33 @@ public final class NexaScriptCompiler implements ScriptCompiler {
             return new NexaCompiledScript(sourceName, scriptSource, program);
         } catch (NexaScriptException exception) {
             throw new ValidationException(formatDiagnostic("compile", sourceName, scriptSource, exception));
+        }
+    }
+
+    /**
+     * Melakukan validasi sintaks skrip Nexa secara kering (dry-run).
+     * Menyimpan rincian error ke map jika parsing gagal.
+     */
+    public boolean validate(String scriptSource, Map<String, Object> errorContainer) {
+        try {
+            NexaTokenizer tokenizer = new NexaTokenizer(scriptSource);
+            NexaParser parser = new NexaParser(tokenizer.tokenize());
+            parser.parseProgram();
+            return true;
+        } catch (NexaScriptException exception) {
+            if (errorContainer != null) {
+                errorContainer.put("line", exception.line());
+                errorContainer.put("column", exception.column());
+                errorContainer.put("message", exception.getMessage());
+            }
+            return false;
+        } catch (Exception e) {
+            if (errorContainer != null) {
+                errorContainer.put("line", 1);
+                errorContainer.put("column", 1);
+                errorContainer.put("message", e.getMessage());
+            }
+            return false;
         }
     }
 

@@ -3,7 +3,7 @@ package nexa.framework.runtime.domain.scripting.model;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionResult;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionControl;
 
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 
 import java.util.LinkedHashMap;
 import java.util.List;

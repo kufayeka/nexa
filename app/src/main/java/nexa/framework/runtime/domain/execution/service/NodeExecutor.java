@@ -10,7 +10,7 @@ import nexa.framework.runtime.domain.deployment.model.CompiledNode;
 import nexa.framework.runtime.domain.deployment.exception.ValidationException;
 import nexa.framework.runtime.domain.workspace.model.NodeCategory;
 import nexa.framework.runtime.domain.execution.model.ExecutionContext;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionResult;
 import nexa.framework.runtime.domain.scripting.model.ScriptRuntimeContext;
 
@@ -94,6 +94,22 @@ final class NodeExecutor {
         }
 
         try {
+            if (nexa.framework.runtime.domain.scripting.registry.PluginRegistry.hasPlugin(node.type())) {
+                nexa.framework.runtime.api.plugin.NexaPlugin instance = nexa.framework.runtime.domain.scripting.registry.PluginRegistry.getInstance(node.id());
+                if (instance == null) {
+                    throw new ValidationException("Plugin instance not found for node: " + node.id());
+                }
+                if (instance instanceof nexa.framework.runtime.api.plugin.NexaFunctionPlugin functionPlugin) {
+                    RuntimeMessage result = functionPlugin.process(message);
+                    if (result != null) {
+                        submitNodeRoutes(flowRuntime, context.executionId(), node.id(), DEFAULT_PORT, result);
+                    }
+                } else if (instance instanceof nexa.framework.runtime.api.plugin.NexaSinkPlugin sinkPlugin) {
+                    sinkPlugin.consume(message);
+                }
+                return;
+            }
+
             if (node.category() == NodeCategory.EXECUTOR) {
                 executeExecutorNode(flowRuntime, context, node, message);
                 return;

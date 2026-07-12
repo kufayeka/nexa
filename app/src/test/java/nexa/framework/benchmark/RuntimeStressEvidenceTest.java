@@ -4,7 +4,7 @@ import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
 import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import org.junit.jupiter.api.Test;
 

@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = "nexa-framework"
 include("app")
+include("nexa-api")

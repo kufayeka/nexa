@@ -10,7 +10,7 @@ import nexa.framework.runtime.domain.deployment.model.CompiledNode;
 import nexa.framework.runtime.domain.execution.model.ExecutionContext;
 import nexa.framework.runtime.domain.execution.model.ExecutionStatus;
 import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 
 import java.time.Duration;
 import java.time.Instant;

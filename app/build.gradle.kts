@@ -12,6 +12,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation(libs.jackson.databind)
+    implementation(project(":nexa-api"))
 }
 
 java {

@@ -10,8 +10,8 @@ import nexa.framework.runtime.domain.scheduler.api.InputNodeActivationPort;
 import nexa.framework.runtime.domain.scheduler.api.InputNodeHandler;
 import nexa.framework.runtime.domain.scheduler.registry.InputNodeHandlerRegistry;
 import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
-import nexa.framework.runtime.domain.execution.helpers.DeepCopyUtil;
+import nexa.framework.runtime.api.model.RuntimeMessage;
+import nexa.framework.runtime.api.helpers.DeepCopyUtil;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -77,6 +77,10 @@ public final class InputActivationService implements InputActivator {
             AtomicBoolean runtimeStarted) {
         CompiledNode inputNode = flowRuntime.compiledFlow().node(inputNodeId);
         if (inputNode == null || inputNode.category() != NodeCategory.INPUT || !inputNode.enabled()) {
+            return;
+        }
+
+        if (nexa.framework.runtime.domain.scripting.registry.PluginRegistry.hasPlugin(inputNode.type())) {
             return;
         }
 

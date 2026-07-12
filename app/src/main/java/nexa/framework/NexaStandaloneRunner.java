@@ -3,16 +3,21 @@ package nexa.framework;
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
+import nexa.framework.runtime.api.plugin.NexaPlugin;
 import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
 import nexa.framework.runtime.domain.workspace.service.WorkspaceJsonLoader;
+import nexa.framework.runtime.domain.scripting.registry.PluginRegistry;
 
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,6 +30,9 @@ public final class NexaStandaloneRunner {
         System.out.println("=================================================");
         System.out.println("        Nexa Runtime Standalone Runner           ");
         System.out.println("=================================================");
+
+        // Muat plugin dinamis eksternal dari direktori ./plugins sebelum men-deploy flow
+        loadDynamicPlugins();
 
         // 1. Tentukan path berkas JSON workspace
         File baseDir = new File(".").getAbsoluteFile();
@@ -116,6 +124,44 @@ public final class NexaStandaloneRunner {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    public static void loadDynamicPlugins() {
+        try {
+            File baseDir = new File(".").getAbsoluteFile();
+            File pluginDir = new File(baseDir, "plugins");
+            if (!pluginDir.exists()) {
+                File rootPluginDir = new File(baseDir, "app/plugins");
+                if (rootPluginDir.exists()) {
+                    pluginDir = rootPluginDir;
+                } else {
+                    pluginDir.mkdirs();
+                }
+            }
+
+            File[] jarFiles = pluginDir.listFiles((dir, name) -> name.endsWith(".jar"));
+            if (jarFiles == null || jarFiles.length == 0) {
+                System.out.println("[Nexa Dynamic Loader] Tidak ada JAR plugin eksternal ditemukan.");
+                return;
+            }
+
+            URL[] urls = new URL[jarFiles.length];
+            for (int i = 0; i < jarFiles.length; i++) {
+                urls[i] = jarFiles[i].toURI().toURL();
+            }
+
+            URLClassLoader classLoader = new URLClassLoader(urls, NexaStandaloneRunner.class.getClassLoader());
+            ServiceLoader<NexaPlugin> serviceLoader = ServiceLoader.load(NexaPlugin.class, classLoader);
+            
+            for (NexaPlugin plugin : serviceLoader) {
+                PluginRegistry.registerMeta(plugin.getPluginType(), plugin.getClass());
+                System.out.println("[Nexa Dynamic Loader] Berhasil memetakan JAR Plugin: " + plugin.getPluginType()
+                        + " (" + plugin.getClass().getName() + ")");
+            }
+        } catch (Exception e) {
+            System.err.println("[Nexa Dynamic Loader][Critical Error] Gagal memuat folder plugin: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

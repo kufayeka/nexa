@@ -1,7 +1,7 @@
 package nexa.framework.runtime.domain.scripting.internal.nexa;
 
 import nexa.framework.runtime.domain.deployment.exception.ValidationException;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.scripting.api.CompiledScript;
 import nexa.framework.runtime.domain.scripting.model.DefaultScriptExecutionResult;
 import nexa.framework.runtime.domain.scripting.service.NexaScriptCompiler;

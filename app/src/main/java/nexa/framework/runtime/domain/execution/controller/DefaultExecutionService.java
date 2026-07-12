@@ -4,7 +4,7 @@ import nexa.framework.runtime.domain.deployment.model.CompiledWorkspace;
 import nexa.framework.runtime.domain.execution.api.ExecutionService;
 import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
 import nexa.framework.runtime.domain.execution.model.FlowRuntime;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.execution.service.RuntimeExecutionService;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 

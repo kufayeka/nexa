@@ -1,6 +1,7 @@
 {
   "id" : "ws-timed-stress",
   "enabled" : true,
+  "resources" : [ ],
   "flows" : [ {
     "id" : "flow-timed-stress",
     "name" : "flow-timed-stress",

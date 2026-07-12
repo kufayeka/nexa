@@ -1,7 +1,7 @@
 package nexa.framework.runtime.api;
 
 import nexa.framework.runtime.domain.execution.model.ExecutionContext;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 
 @FunctionalInterface
 public interface OutputConsumer {

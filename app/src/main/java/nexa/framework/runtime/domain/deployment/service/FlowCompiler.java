@@ -290,6 +290,10 @@ public final class FlowCompiler {
             return null;
         }
 
+        if (nexa.framework.runtime.domain.scripting.registry.PluginRegistry.hasPlugin(nodeDefinition.type())) {
+            return null;
+        }
+
         Object scriptRaw = nodeDefinition.config().get("code");
         if (!(scriptRaw instanceof String)) {
             scriptRaw = nodeDefinition.config().get("script");

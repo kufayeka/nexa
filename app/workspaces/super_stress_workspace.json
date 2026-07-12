@@ -1,6 +1,7 @@
 {
   "id" : "ws-super-stress",
   "enabled" : true,
+  "resources" : [ ],
   "flows" : [ {
     "id" : "flow-0",
     "name" : "flow-0",

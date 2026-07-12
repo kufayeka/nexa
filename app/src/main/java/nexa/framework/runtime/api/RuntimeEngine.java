@@ -1,7 +1,7 @@
 package nexa.framework.runtime.api;
 
 import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 
 public interface RuntimeEngine {

@@ -12,7 +12,7 @@ import nexa.framework.runtime.domain.deployment.exception.ValidationException;
 import nexa.framework.runtime.domain.workspace.model.NodeCategory;
 import nexa.framework.runtime.domain.execution.api.InputActivator;
 import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
 import nexa.framework.runtime.domain.execution.model.FlowRuntime;

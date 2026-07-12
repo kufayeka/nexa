@@ -1,4 +1,4 @@
-package nexa.framework.runtime.domain.execution.helpers;
+package nexa.framework.runtime.api.helpers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -50,5 +50,3 @@ public final class DeepCopyUtil {
         };
     }
 }
-
-
