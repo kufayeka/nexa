@@ -6,9 +6,9 @@ package nexa.framework;
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
-import nexa.framework.runtime.definition.WorkspaceDefinition;
-import nexa.framework.runtime.engine.DefaultRuntimeEngine;
-import nexa.framework.runtime.json.WorkspaceJsonLoader;
+import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
+import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
+import nexa.framework.runtime.domain.workspace.service.WorkspaceJsonLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;

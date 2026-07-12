@@ -1,8 +1,8 @@
 package nexa.framework.runtime.api;
 
-import nexa.framework.runtime.definition.WorkspaceDefinition;
-import nexa.framework.runtime.message.RuntimeMessage;
-import nexa.framework.runtime.stats.RuntimeStatisticsSnapshot;
+import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
+import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 
 public interface RuntimeEngine {
 
@@ -24,3 +24,4 @@ public interface RuntimeEngine {
 
     RuntimeStatisticsSnapshot statistics(String workspaceId, String flowId);
 }
+

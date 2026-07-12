@@ -1,11 +1,11 @@
 package nexa.framework.benchmark;
 
-import nexa.framework.runtime.definition.ConnectionDefinition;
-import nexa.framework.runtime.definition.FlowDefinition;
-import nexa.framework.runtime.definition.InputExecutionPolicyDefinition;
-import nexa.framework.runtime.definition.NodeCategory;
-import nexa.framework.runtime.definition.NodeDefinition;
-import nexa.framework.runtime.definition.WorkspaceDefinition;
+import nexa.framework.runtime.domain.workspace.model.ConnectionDefinition;
+import nexa.framework.runtime.domain.workspace.model.FlowDefinition;
+import nexa.framework.runtime.domain.workspace.model.InputExecutionPolicyDefinition;
+import nexa.framework.runtime.domain.workspace.model.NodeCategory;
+import nexa.framework.runtime.domain.workspace.model.NodeDefinition;
+import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -185,3 +185,4 @@ public final class StressWorkspaceGenerator {
                 return builder.toString();
         }
 }
+

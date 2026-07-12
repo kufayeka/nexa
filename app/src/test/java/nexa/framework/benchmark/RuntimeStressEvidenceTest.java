@@ -3,9 +3,9 @@ package nexa.framework.benchmark;
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
-import nexa.framework.runtime.engine.DefaultRuntimeEngine;
-import nexa.framework.runtime.message.RuntimeMessage;
-import nexa.framework.runtime.stats.RuntimeStatisticsSnapshot;
+import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
+import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -110,6 +110,7 @@ class RuntimeStressEvidenceTest {
         runtime.startRuntime();
 
         assertTrue(latch.await(4, TimeUnit.SECONDS));
+        Thread.sleep(100);
 
         RuntimeStatisticsSnapshot stats = runtime.statistics(workspaceId, flowId);
         assertTrue(stats.completed() >= 3);
@@ -250,3 +251,4 @@ class RuntimeStressEvidenceTest {
         return count;
     }
 }
+

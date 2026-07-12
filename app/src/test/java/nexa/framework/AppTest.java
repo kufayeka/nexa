@@ -3,11 +3,11 @@ package nexa.framework;
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
-import nexa.framework.runtime.compile.ValidationException;
-import nexa.framework.runtime.engine.DefaultRuntimeEngine;
-import nexa.framework.runtime.json.WorkspaceJsonLoader;
-import nexa.framework.runtime.message.RuntimeMessage;
-import nexa.framework.runtime.stats.RuntimeStatisticsSnapshot;
+import nexa.framework.runtime.domain.deployment.exception.ValidationException;
+import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
+import nexa.framework.runtime.domain.workspace.service.WorkspaceJsonLoader;
+import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
+import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -531,3 +531,4 @@ class AppTest {
         return result;
     }
 }
+
