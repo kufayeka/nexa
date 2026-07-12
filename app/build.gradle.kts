@@ -26,6 +26,19 @@ application {
     applicationDefaultJvmArgs = listOf("-Xms8m", "-Xmx128m")
 }
 
+// Konfigurasi khusus shadowJar versi 9.x GradleUp
+tasks.shadowJar {
+    archiveBaseName.set("nexa-core") // Mengubah nama utama menjadi nexa-core
+    archiveClassifier.set("")        // Menghapus akhiran "-shadow"
+    archiveVersion.set("")           // Menghapus versi jika tidak ingin versi di nama file
+    
+    manifest {
+        attributes(
+            "Main-Class" to "nexa.framework.NexaStandaloneRunner" // Set runner utama sebagai Main
+        )
+    }
+}
+
 tasks.jar {
     manifest {
         attributes(
