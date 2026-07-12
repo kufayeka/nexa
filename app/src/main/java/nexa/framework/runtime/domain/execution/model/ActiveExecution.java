@@ -1,7 +1,5 @@
 package nexa.framework.runtime.domain.execution.model;
 
-import nexa.framework.runtime.domain.execution.model.ExecutionContext;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,5 +29,3 @@ public final class ActiveExecution {
         return futures;
     }
 }
-
-

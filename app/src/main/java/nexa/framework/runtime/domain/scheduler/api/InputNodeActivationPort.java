@@ -3,7 +3,6 @@ package nexa.framework.runtime.domain.scheduler.api;
 import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
 import nexa.framework.runtime.domain.deployment.model.CompiledNode;
 
-import nexa.framework.runtime.domain.deployment.model.CompiledNode;
 import nexa.framework.runtime.api.model.RuntimeMessage;
 
 import java.time.Duration;
@@ -24,5 +23,3 @@ public interface InputNodeActivationPort {
 
     void executeTriggeredInput(CompiledNode inputNode, RuntimeMessage message);
 }
-
-

@@ -102,7 +102,8 @@ public final class NexaRuntime {
                     functionDeclaration.body(),
                     functionDeclaration.line(),
                     functionDeclaration.column());
-            writeInternal(functionDeclaration.name(), function, functionDeclaration.line(), functionDeclaration.column());
+            writeInternal(functionDeclaration.name(), function, functionDeclaration.line(),
+                    functionDeclaration.column());
             return;
         }
 
@@ -144,7 +145,8 @@ public final class NexaRuntime {
         }
 
         if (statement instanceof NexaReturnStatement returnStatement) {
-            Object value = returnStatement.expression() == null ? null : evaluateExpression(returnStatement.expression());
+            Object value = returnStatement.expression() == null ? null
+                    : evaluateExpression(returnStatement.expression());
             throw new ReturnSignal(value);
         }
     }
@@ -293,7 +295,8 @@ public final class NexaRuntime {
         }
 
         if (expression.target() instanceof NexaIdentifierExpression identifierExpression) {
-            write(identifierExpression.name(), assignedValue, identifierExpression.line(), identifierExpression.column());
+            write(identifierExpression.name(), assignedValue, identifierExpression.line(),
+                    identifierExpression.column());
             return assignedValue;
         }
 
@@ -416,7 +419,7 @@ public final class NexaRuntime {
                     "substring", "slice", "toUpperCase", "toLowerCase", "join",
                     "push", "pop", "shift", "unshift", "indexOf", "splice", "toISOString", "match",
                     "map", "filter", "reduce", "forEach", "find", "some", "every" ->
-                    new BoundMethod(target, property);
+                new BoundMethod(target, property);
             default -> MissingValue.INSTANCE;
         };
     }
@@ -434,7 +437,8 @@ public final class NexaRuntime {
             builder.append(template, cursor, start);
             int end = findTemplateExpressionEnd(template, start + 2, expression.line(), expression.column());
             String nestedExpression = template.substring(start + 2, end);
-            NexaExpression parsed = new NexaParser(new NexaTokenizer(nestedExpression).tokenize()).parseExpressionOnly();
+            NexaExpression parsed = new NexaParser(new NexaTokenizer(nestedExpression).tokenize())
+                    .parseExpressionOnly();
             Object value = evaluateExpression(parsed);
             builder.append(stringifyValue(value));
             cursor = end + 1;
@@ -998,8 +1002,8 @@ public final class NexaRuntime {
             @Override
             public Object member(String name, int line, int column) {
                 return switch (name) {
-                    case "now" -> (NexaCallable) (runtime, arguments, callLine, callColumn) ->
-                            new DateTimeValue(Instant.now());
+                    case "now" ->
+                        (NexaCallable) (runtime, arguments, callLine, callColumn) -> new DateTimeValue(Instant.now());
                     default -> throw new NexaScriptException("Member DateTime tidak dikenal: " + name, line, column);
                 };
             }
@@ -1191,5 +1195,3 @@ public final class NexaRuntime {
         return arguments.get(index);
     }
 }
-
-

@@ -1,11 +1,11 @@
 package nexa.framework.runtime.domain.scripting.service;
+
 import nexa.framework.runtime.domain.scripting.api.CompiledScript;
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionResult;
 import nexa.framework.runtime.domain.scripting.model.ScriptRuntimeContext;
 import nexa.framework.runtime.api.model.RuntimeMessage;
 
 import nexa.framework.runtime.domain.deployment.exception.ValidationException;
-import nexa.framework.runtime.api.model.RuntimeMessage;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -201,5 +201,3 @@ class NexaScriptCompilerTest {
                 new ConcurrentHashMap<>());
     }
 }
-
-

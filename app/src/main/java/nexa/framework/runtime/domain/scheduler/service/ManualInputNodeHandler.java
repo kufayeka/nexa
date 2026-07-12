@@ -1,7 +1,5 @@
 package nexa.framework.runtime.domain.scheduler.service;
 
-import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
-
 import nexa.framework.runtime.domain.scheduler.api.InputNodeHandler;
 import nexa.framework.runtime.domain.scheduler.api.InputNodeActivationPort;
 
@@ -19,5 +17,3 @@ public final class ManualInputNodeHandler implements InputNodeHandler {
         activationPort.getOrCreateState(inputNode);
     }
 }
-
-

@@ -1,7 +1,5 @@
 package nexa.framework.runtime.domain.scripting.api;
 
-import nexa.framework.runtime.domain.scripting.model.ScriptRuntimeContext;
-
 public interface ScriptEngine {
 
     String language();
@@ -16,5 +14,3 @@ public interface ScriptEngine {
         compiler().dispose();
     }
 }
-
-

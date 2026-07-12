@@ -14,7 +14,6 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ServiceLoader;
@@ -22,7 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * NexaStandaloneRunner bertindak sebagai runner mandiri (standalone executable)
- * untuk menjalankan workspace dari file JSON di luar lingkungan test framework JUnit.
+ * untuk menjalankan workspace dari file JSON di luar lingkungan test framework
+ * JUnit.
  */
 public final class NexaStandaloneRunner {
 
@@ -31,7 +31,8 @@ public final class NexaStandaloneRunner {
         System.out.println("        Nexa Runtime Standalone Runner           ");
         System.out.println("=================================================");
 
-        // Muat plugin dinamis eksternal dari direktori ./plugins sebelum men-deploy flow
+        // Muat plugin dinamis eksternal dari direktori ./plugins sebelum men-deploy
+        // flow
         loadDynamicPlugins();
 
         // 1. Tentukan path berkas JSON workspace
@@ -80,8 +81,7 @@ public final class NexaStandaloneRunner {
         // 4. Inisialisasi Engine
         RuntimeEngine runtime = new DefaultRuntimeEngine(
                 new RuntimeConfiguration(Duration.ofSeconds(15)),
-                outputConsumer
-        );
+                outputConsumer);
 
         // 5. Deploy & Jalankan
         System.out.println("[standalone] Memulai kompilasi graf dan deploy...");
@@ -89,7 +89,8 @@ public final class NexaStandaloneRunner {
         System.out.println("[standalone] Menghidupkan runtime...");
         runtime.startRuntime();
 
-        // Tentukan durasi running (default 10 detik agar tidak berjalan selamanya secara tidak sengaja)
+        // Tentukan durasi running (default 10 detik agar tidak berjalan selamanya
+        // secara tidak sengaja)
         int runDuration = Integer.getInteger("run.duration", 10);
         System.out.println("[standalone] Runtime aktif. Tekan Ctrl+C untuk menghentikan.");
         if (runDuration > 0) {
@@ -120,7 +121,8 @@ public final class NexaStandaloneRunner {
                 }
             }
             if (runDuration > 0) {
-                System.out.println("[standalone] Batas durasi eksekusi tercapai (" + runDuration + " detik). Mematikan...");
+                System.out.println(
+                        "[standalone] Batas durasi eksekusi tercapai (" + runDuration + " detik). Mematikan...");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -153,7 +155,7 @@ public final class NexaStandaloneRunner {
 
             URLClassLoader classLoader = new URLClassLoader(urls, NexaStandaloneRunner.class.getClassLoader());
             ServiceLoader<NexaPlugin> serviceLoader = ServiceLoader.load(NexaPlugin.class, classLoader);
-            
+
             for (NexaPlugin plugin : serviceLoader) {
                 PluginRegistry.registerMeta(plugin.getPluginType(), plugin.getClass());
                 System.out.println("[Nexa Dynamic Loader] Berhasil memetakan JAR Plugin: " + plugin.getPluginType()

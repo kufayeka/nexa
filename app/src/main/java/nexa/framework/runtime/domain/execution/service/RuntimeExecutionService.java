@@ -1,8 +1,6 @@
 package nexa.framework.runtime.domain.execution.service;
 
-import nexa.framework.runtime.domain.execution.model.ActiveExecution;
 import nexa.framework.runtime.domain.execution.model.FlowRuntime;
-import nexa.framework.runtime.domain.execution.model.NodeRuntime;
 import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
 
 import nexa.framework.runtime.api.OutputConsumer;
@@ -14,8 +12,6 @@ import nexa.framework.runtime.domain.execution.api.InputActivator;
 import nexa.framework.runtime.domain.scheduler.model.InputNodeRuntimeState;
 import nexa.framework.runtime.api.model.RuntimeMessage;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
-import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
-import nexa.framework.runtime.domain.execution.model.FlowRuntime;
 
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -49,7 +45,8 @@ public final class RuntimeExecutionService {
     }
 
     /**
-     * Metode ini dipanggil setelah modul scheduler diinstansiasi di Composition Root
+     * Metode ini dipanggil setelah modul scheduler diinstansiasi di Composition
+     * Root
      * untuk menghindari circular dependency.
      */
     public void setInputActivator(InputActivator inputActivator) {
@@ -170,7 +167,8 @@ public final class RuntimeExecutionService {
         lifecycleManager.stopWorkspaceRuntime(workspaceRuntime);
     }
 
-    public static WorkspaceRuntime requireWorkspace(ConcurrentMap<String, WorkspaceRuntime> workspaces, String workspaceId) {
+    public static WorkspaceRuntime requireWorkspace(ConcurrentMap<String, WorkspaceRuntime> workspaces,
+            String workspaceId) {
         WorkspaceRuntime workspaceRuntime = workspaces.get(workspaceId);
         if (workspaceRuntime == null) {
             throw new ValidationException("Workspace " + workspaceId + " not deployed");
@@ -187,4 +185,3 @@ public final class RuntimeExecutionService {
         return flowRuntime;
     }
 }
-

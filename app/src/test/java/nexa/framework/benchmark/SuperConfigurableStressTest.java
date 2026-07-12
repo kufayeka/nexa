@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -28,9 +27,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * SuperConfigurableStressTest merupakan pengujian stres tingkat tinggi yang kompleks.
- * Dapat diatur jumlah flow, nodes per flow, dan fan-out degree via System Properties atau static field.
- * Skrip eksekusi menggunakan 100% fitur dari Nexa DSL V1 (comments, null-safety, array methods, regex, dll.).
+ * SuperConfigurableStressTest merupakan pengujian stres tingkat tinggi yang
+ * kompleks.
+ * Dapat diatur jumlah flow, nodes per flow, dan fan-out degree via System
+ * Properties atau static field.
+ * Skrip eksekusi menggunakan 100% fitur dari Nexa DSL V1 (comments,
+ * null-safety, array methods, regex, dll.).
  */
 public final class SuperConfigurableStressTest {
 
@@ -53,11 +55,10 @@ public final class SuperConfigurableStressTest {
         // 2. Inisialisasi Runtime Engine (Composition Root)
         RuntimeEngine runtime = new DefaultRuntimeEngine(
                 new RuntimeConfiguration(Duration.ofSeconds(15)),
-                outputConsumer
-        );
+                outputConsumer);
 
         String workspaceId = "ws-super-stress";
-        
+
         System.out.println("[super-stress] Membangun workspace dengan " + FLOW_COUNT + " flows...");
         long startBuild = System.nanoTime();
         WorkspaceDefinition workspaceDef = generateSuperStressWorkspace(workspaceId, FLOW_COUNT, FANOUT_DEGREE);
@@ -70,7 +71,8 @@ public final class SuperConfigurableStressTest {
         new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(jsonFile, workspaceDef);
         System.out.println("[super-stress] Workspace JSON disimpan ke: " + jsonFile.getAbsolutePath());
 
-        // 3. Deploy workspace (kompilator akan mengompilasi ratusan skrip secara bersamaan)
+        // 3. Deploy workspace (kompilator akan mengompilasi ratusan skrip secara
+        // bersamaan)
         System.out.println("[super-stress] Memulai kompilasi dan deploy...");
         long startDeploy = System.nanoTime();
         runtime.deploy(workspaceDef);
@@ -80,17 +82,19 @@ public final class SuperConfigurableStressTest {
         // 4. Aktifkan runtime
         runtime.startRuntime();
 
-        // 5. Picu pemicu manual untuk setiap flow secara paralel menggunakan virtual threads
+        // 5. Picu pemicu manual untuk setiap flow secara paralel menggunakan virtual
+        // threads
         System.out.println("[super-stress] Menembakkan trigger manual ke " + FLOW_COUNT + " flows...");
         long startTrigger = System.nanoTime();
-        
+
         Thread[] threads = new Thread[FLOW_COUNT];
         for (int i = 0; i < FLOW_COUNT; i++) {
             final String flowId = "flow-" + i;
             threads[i] = Thread.startVirtualThread(() -> {
                 RuntimeMessage seed = new RuntimeMessage();
                 // Kirim payload mentah untuk di-parse oleh script
-                seed.writeValue("payload.rawData", "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}");
+                seed.writeValue("payload.rawData",
+                        "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}");
                 runtime.trigger(workspaceId, flowId, "input-manual", seed);
             });
         }
@@ -100,18 +104,21 @@ public final class SuperConfigurableStressTest {
             thread.join();
         }
 
-        // 6. Tunggu hingga semua rute fan-out paralel selesai diproses oleh virtual threads
+        // 6. Tunggu hingga semua rute fan-out paralel selesai diproses oleh virtual
+        // threads
         boolean finished = latch.await(10, TimeUnit.SECONDS);
         long triggerDurationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTrigger);
-        
+
         System.out.println("[super-stress] Pemrosesan selesai dalam " + triggerDurationMs + " ms.");
-        System.out.println("[super-stress] Total output yang dikonsumsi: " + outputCounter.get() + " / " + expectedOutputs);
+        System.out.println(
+                "[super-stress] Total output yang dikonsumsi: " + outputCounter.get() + " / " + expectedOutputs);
 
         // Pastikan semua output terkirim tanpa ada kebocoran
         assertTrue(finished, "Stress test timeout! Hanya memproses " + outputCounter.get() + " pesan.");
         assertTrue(outputCounter.get() >= expectedOutputs);
 
-        // 7. Cek metrik statistik untuk flow pertama untuk memastikan stats dicatat dengan benar
+        // 7. Cek metrik statistik untuk flow pertama untuk memastikan stats dicatat
+        // dengan benar
         RuntimeStatisticsSnapshot stats = runtime.statistics(workspaceId, "flow-0");
         System.out.println("[super-stress] Statistik flow-0: completed=" + stats.completed()
                 + " failed=" + stats.failed()
@@ -123,26 +130,27 @@ public final class SuperConfigurableStressTest {
 
     private WorkspaceDefinition generateSuperStressWorkspace(String workspaceId, int flowCount, int fanoutDegree) {
         List<FlowDefinition> flows = new ArrayList<>();
-        
+
         // Buat skrip fanout utama untuk merutekan pesan ke port fan-out paralel
         StringBuilder fanoutScriptBuilder = new StringBuilder();
         fanoutScriptBuilder.append("send([");
         for (int i = 0; i < fanoutDegree; i++) {
-            if (i > 0) fanoutScriptBuilder.append(", ");
+            if (i > 0)
+                fanoutScriptBuilder.append(", ");
             fanoutScriptBuilder.append("\"p").append(i).append("\"");
         }
         fanoutScriptBuilder.append("], msg)");
         String fanoutScript = fanoutScriptBuilder.toString();
 
         // Skrip kompleks yang memanfaatkan seluruh fitur Nexa DSL V1
-        String complexProcessingScript = 
-                "// 1. Single-line comment: Memulai kalkulasi sensor batch\n" +
+        String complexProcessingScript = "// 1. Single-line comment: Memulai kalkulasi sensor batch\n" +
                 "/*\n" +
                 " * 2. Block comment:\n" +
                 " * Melakukan parsing JSON, null-safety, named function, map-filter-reduce,\n" +
                 " * switch-case, regex replace, dan format datetime.\n" +
                 " */\n" +
-                "val rawInput = msg.payload?.rawData ?? \"{\\\"speed\\\":100,\\\"temp\\\":95.5,\\\"batches\\\":[10,20,30]}\"\n" +
+                "val rawInput = msg.payload?.rawData ?? \"{\\\"speed\\\":100,\\\"temp\\\":95.5,\\\"batches\\\":[10,20,30]}\"\n"
+                +
                 "val parsed = Json.parse(rawInput)\n" +
                 "\n" +
                 "// 3. Null-safety & type conversion\n" +
@@ -215,8 +223,7 @@ public final class SuperConfigurableStressTest {
                     null,
                     true,
                     new InputExecutionPolicyDefinition(1024),
-                    Map.of()
-            ));
+                    Map.of()));
 
             // 2. Routing Executor Node (Fan-out)
             nodes.add(new NodeDefinition(
@@ -226,8 +233,7 @@ public final class SuperConfigurableStressTest {
                     "nexa",
                     true,
                     new InputExecutionPolicyDefinition(null),
-                    Map.of("script", fanoutScript)
-            ));
+                    Map.of("script", fanoutScript)));
 
             connections.add(new ConnectionDefinition("input-manual", "default", "exec-router"));
 
@@ -244,8 +250,7 @@ public final class SuperConfigurableStressTest {
                         "nexa",
                         true,
                         new InputExecutionPolicyDefinition(null),
-                        Map.of("script", complexProcessingScript)
-                ));
+                        Map.of("script", complexProcessingScript)));
 
                 nodes.add(new NodeDefinition(
                         outId,
@@ -254,8 +259,7 @@ public final class SuperConfigurableStressTest {
                         null,
                         true,
                         new InputExecutionPolicyDefinition(null),
-                        Map.of()
-                ));
+                        Map.of()));
 
                 connections.add(new ConnectionDefinition("exec-router", port, execId));
                 connections.add(new ConnectionDefinition(execId, "default", outId));

@@ -2,7 +2,6 @@ package nexa.framework.runtime.domain.execution.service;
 
 import nexa.framework.runtime.domain.execution.model.ActiveExecution;
 import nexa.framework.runtime.domain.execution.model.FlowRuntime;
-import nexa.framework.runtime.domain.execution.model.NodeRuntime;
 import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
 
 import nexa.framework.runtime.api.RuntimeConfiguration;
@@ -181,5 +180,3 @@ final class ExecutionLifecycleManager {
         }
     }
 }
-
-

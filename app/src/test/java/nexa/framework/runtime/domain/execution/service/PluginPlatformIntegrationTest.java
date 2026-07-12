@@ -29,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class PluginPlatformIntegrationTest {
@@ -51,7 +50,7 @@ public final class PluginPlatformIntegrationTest {
         // Suntikkan verifikator statis ke dummy class (untuk simplifikasi pengujian)
         DummyResourcePlugin.onInitCallback = () -> resourceInitialized.set(true);
         DummyResourcePlugin.onStartCallback = () -> resourceStarted.set(true);
-        
+
         DummySinkPlugin.consumeCallback = msg -> {
             sinkCallCount.incrementAndGet();
             assertEquals("hello-transformed", msg.readRawValue("payload.status"));
@@ -61,7 +60,7 @@ public final class PluginPlatformIntegrationTest {
 
         // 2. Buat objek WorkspaceDefinition baru dengan Resources
         ResourceDefinition resDef = new ResourceDefinition("res-db", "dummy-resource", Map.of("jdbcUrl", "jdbc:dummy"));
-        
+
         NodeDefinition sourceNode = new NodeDefinition(
                 "node-source",
                 NodeCategory.INPUT,
@@ -69,8 +68,7 @@ public final class PluginPlatformIntegrationTest {
                 null,
                 true,
                 new InputExecutionPolicyDefinition(null),
-                Map.of("messagePayload", "hello")
-        );
+                Map.of("messagePayload", "hello"));
 
         NodeDefinition functionNode = new NodeDefinition(
                 "node-function",
@@ -79,8 +77,7 @@ public final class PluginPlatformIntegrationTest {
                 null,
                 true,
                 new InputExecutionPolicyDefinition(null),
-                Map.of("suffix", "-transformed", "resourceRef", "res-db")
-        );
+                Map.of("suffix", "-transformed", "resourceRef", "res-db"));
 
         NodeDefinition sinkNode = new NodeDefinition(
                 "node-sink",
@@ -89,24 +86,25 @@ public final class PluginPlatformIntegrationTest {
                 null,
                 true,
                 new InputExecutionPolicyDefinition(null),
-                Map.of()
-        );
+                Map.of());
 
         List<ConnectionDefinition> connections = List.of(
                 new ConnectionDefinition("node-source", "default", "node-function"),
-                new ConnectionDefinition("node-function", "default", "node-sink")
-        );
+                new ConnectionDefinition("node-function", "default", "node-sink"));
 
-        FlowDefinition flow = new FlowDefinition("flow-1", "flow-1", true, List.of(sourceNode, functionNode, sinkNode), connections);
+        FlowDefinition flow = new FlowDefinition("flow-1", "flow-1", true, List.of(sourceNode, functionNode, sinkNode),
+                connections);
         WorkspaceDefinition wsDef = new WorkspaceDefinition("ws-plugin-test", true, List.of(resDef), List.of(flow));
 
         // 3. Setup Engine
-        OutputConsumer outputConsumer = (context, nodeId, message) -> {};
-        RuntimeEngine runtime = new DefaultRuntimeEngine(new RuntimeConfiguration(Duration.ofSeconds(5)), outputConsumer);
+        OutputConsumer outputConsumer = (context, nodeId, message) -> {
+        };
+        RuntimeEngine runtime = new DefaultRuntimeEngine(new RuntimeConfiguration(Duration.ofSeconds(5)),
+                outputConsumer);
 
         // 4. Deploy dan Start
         runtime.deploy(wsDef);
-        
+
         assertTrue(resourceInitialized.get(), "Resource plugin should be initialized on deploy!");
         assertTrue(resourceStarted.get(), "Resource plugin should be started on deploy/onStart!");
 
@@ -145,12 +143,14 @@ public final class PluginPlatformIntegrationTest {
 
         @Override
         public void onInit(String targetId, Map<String, Object> config, NexaPluginContext context) throws Exception {
-            if (onInitCallback != null) onInitCallback.run();
+            if (onInitCallback != null)
+                onInitCallback.run();
         }
 
         @Override
         public void onStart() throws Exception {
-            if (onStartCallback != null) onStartCallback.run();
+            if (onStartCallback != null)
+                onStartCallback.run();
         }
 
         @Override

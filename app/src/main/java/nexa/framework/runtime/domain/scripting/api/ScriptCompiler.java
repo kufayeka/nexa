@@ -1,7 +1,5 @@
 package nexa.framework.runtime.domain.scripting.api;
 
-import nexa.framework.runtime.domain.scripting.api.CompiledScript;
-
 public interface ScriptCompiler {
 
     CompiledScript compile(String scriptSource, String sourceName);
@@ -12,5 +10,3 @@ public interface ScriptCompiler {
     default void dispose() {
     }
 }
-
-

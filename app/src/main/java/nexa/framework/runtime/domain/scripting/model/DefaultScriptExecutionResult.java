@@ -1,7 +1,6 @@
 package nexa.framework.runtime.domain.scripting.model;
 
 import nexa.framework.runtime.domain.scripting.api.ScriptExecutionResult;
-import nexa.framework.runtime.domain.scripting.api.ScriptExecutionControl;
 
 import nexa.framework.runtime.api.model.RuntimeMessage;
 
@@ -41,5 +40,3 @@ public final class DefaultScriptExecutionResult implements ScriptExecutionResult
         return stopped;
     }
 }
-
-

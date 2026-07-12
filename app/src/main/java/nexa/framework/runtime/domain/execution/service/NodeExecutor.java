@@ -3,7 +3,6 @@ package nexa.framework.runtime.domain.execution.service;
 import nexa.framework.runtime.domain.execution.model.ActiveExecution;
 import nexa.framework.runtime.domain.execution.model.FlowRuntime;
 import nexa.framework.runtime.domain.execution.model.NodeRuntime;
-import nexa.framework.runtime.domain.execution.model.WorkspaceRuntime;
 
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.domain.deployment.model.CompiledNode;
@@ -95,7 +94,8 @@ final class NodeExecutor {
 
         try {
             if (nexa.framework.runtime.domain.scripting.registry.PluginRegistry.hasPlugin(node.type())) {
-                nexa.framework.runtime.api.plugin.NexaPlugin instance = nexa.framework.runtime.domain.scripting.registry.PluginRegistry.getInstance(node.id());
+                nexa.framework.runtime.api.plugin.NexaPlugin instance = nexa.framework.runtime.domain.scripting.registry.PluginRegistry
+                        .getInstance(node.id());
                 if (instance == null) {
                     throw new ValidationException("Plugin instance not found for node: " + node.id());
                 }
@@ -165,5 +165,3 @@ final class NodeExecutor {
         }
     }
 }
-
-
