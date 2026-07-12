@@ -37,4 +37,5 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
     minHeapSize = "8m"
     maxHeapSize = "128m"
+    systemProperties(System.getProperties().map { it.key.toString() to it.value }.toMap())
 }
