@@ -36,3 +36,9 @@ Setiap paket domain wajib mematuhi pemisahan sub-paket internal berikut untuk me
 ## Larangan Keras
 * **DILARANG** membuat paket utilitas generik global seperti `common/`, `util/`, `helper/`, atau `misc/`. Semua utilitas harus spesifik diletakkan di sub-paket `helpers/` di bawah domain terkait (misal: `DeepCopyUtil` di execution, `DurationParser` di scheduler).
 * **DILARANG** melakukan import langsung ke kelas implementasi (`service/` atau `controller/`) milik domain lain. Akses antar-domain **wajib** melalui antarmuka di sub-paket `api/`.
+
+---
+
+## Kewajiban Pemeliharaan Dokumentasi (README.md)
+* Setiap Domain wajib memiliki berkas `README.md` di root direktorinya yang menjelaskan tugas, tanggung jawab, komponen utama, serta Standar Operasional Prosedur (SOP) ekspansi domain tersebut.
+* **WAJIB** memperbarui atau membuat berkas `README.md` jika terjadi perubahan yang mengubah alur sistem, logika bisnis, atau pembagian tanggung jawab modul. Segala bentuk penyimpangan dokumentasi (documentation drift) dilarang keras.
