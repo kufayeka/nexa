@@ -1,1187 +1,350 @@
-# Nexa DSL V1
+# Nexa DSL V1: Referensi Bahasa & Studi Kasus Industri
 
-Dokumen ini menjelaskan cara memprogram node executor `language = "nexa"` di Nexa Framework.
+Dokumen ini menjelaskan spesifikasi lengkap cara memprogram executor node menggunakan **Nexa DSL V1** (`language = "nexa"`). Nexa DSL adalah bahasa pemrograman scripting tersemat (*embedded*) ringan, cepat, dan aman, yang dirancang khusus untuk memproses transformasi aliran data (*data flow*) secara efisien di dalam Nexa Framework.
 
-Nexa DSL adalah bahasa scripting kecil untuk logic flow. Fokusnya:
+---
 
-- compile cepat
-- runtime cepat
-- syntax ringkas
-- cukup aman untuk transformasi data flow
-- mudah di-embed ke runtime Java
+## 📖 Pendahuluan & Filosofi Runtime
 
-V1 bukan general purpose language penuh. Bahasa ini dibuat untuk executor node, bukan untuk menggantikan Java.
+Nexa DSL dirancang dengan tujuan utama:
+* **Kecepatan Kompilasi & Runtime**: Dikompilasi langsung ke bentuk AST (Abstract Syntax Tree) berkinerja tinggi di JVM.
+* **Isolasi Mutlak**: Skrip dieksekusi secara asinkronus dan aman di dalam thread virtual tanpa efek samping (*side effects*) ke flow lain.
+* **Null-safety Tingkat Bahasa**: Menyediakan operator penanganan data kosong (`null`) untuk mengeliminasi resiko kegagalan runtime.
 
-## Status V1
+> [!NOTE]
+> Nexa DSL V1 menggunakan model tipe dinamis (*dynamic runtime typing*). Tidak ada kata kunci `undefined`; properti objek atau indeks array yang tidak ditemukan akan secara otomatis mengembalikan nilai `null`.
 
-Yang sudah tersedia:
+---
 
-- `val`, `var`
-- `null`
-- `?.`
-- `??`
-- object literal
-- array literal
-- property access
-- index access
-- assignment ke property/index
-- `if / else if / else`
-- `switch / case / default`
-- `for (init; condition; update)`
-- `return`
-- `fun` function declaration
-- `fun (...) => ...` lambda expression
-- closure sederhana
-- built-in `msg`
-- built-in `Json`
-- built-in `Math`
-- built-in `DateTime`
-- built-in `Regex`
-- built-in `send`
-- konversi `toString`, `toBool`, `toNumber`, `toDate`, `toDateTime`
-- array methods dasar dan higher-order
-- string methods dasar
-- regex matching
+## 🛠️ 1. Variabel & Model Nilai
 
-Yang belum tersedia:
+Nexa DSL mendukung tipe data primitif dan kompleks berikut: `Number`, `Boolean`, `String`, `Date`, `DateTime`, `Array`, `Object`, `Function`, dan `null`.
 
-- `asset`
-- `eventSys`
-- `action`
-- `await`
-- `while`
-- `break`
-- `continue`
-- `for in`
-- `for of`
-- class
-- import/module syntax
-- static type declaration
-- user-defined extension method syntax
-- async function
-
-## Filosofi Runtime
-
-Nexa DSL saat ini memakai model type runtime, bukan static typing compile-time.
-
-Artinya:
-
-- error type mismatch akan muncul saat runtime
-- nilai property yang tidak ada dibaca sebagai `null`
-- `undefined` tidak ada
-- number belum dibedakan tegas menjadi `int32`, `float64`, `uint32`, dan seterusnya
-
-## 1. Quick Start
-
-Contoh script singkat:
-
+### 1.1 Variabel Read-Only (`val`)
+Variabel yang dideklarasikan dengan `val` bersifat immutable (tidak dapat di-assign ulang setelah diinisialisasi).
 ```nexa
-val rawSpeed = msg.payload?.speed ?? 0
-val speed = rawSpeed.toNumber()
-
-if (speed >= 120) {
-    msg.payload = {
-        level: "alarm",
-        speed: speed,
-        text: `High speed: ${speed}`
-    }
-    send("alarm", msg)
-    return
-}
-
-msg.payload = {
-    level: "ok",
-    speed: speed
-}
-
-send(msg)
+val machineId = "Taiyo-01"
+// machineId = "Taiyo-02" // ERROR!
 ```
 
-## 2. Model Nilai
-
-Nilai runtime yang dipakai evaluator:
-
-- `Number`
-- `Boolean`
-- `String`
-- `Date`
-- `DateTime`
-- `Array`
-- `Object`
-- `Function`
-- `null`
-
-Catatan:
-
-- hanya ada `null`, tidak ada `undefined`
-- object property yang tidak ditemukan akan menghasilkan `null`
-- optional chaining hanya berlaku di property access `?.`
-- index access pada array/string/object yang di luar batas akan menghasilkan `null`
-
-## 3. Variabel
-
-### 3.1 `val`
-
-`val` adalah variabel read-only.
-
+### 1.2 Variabel Mutable (`var`)
+Variabel yang dideklarasikan dengan `var` dapat diubah nilainya kapan saja.
 ```nexa
-val machine = "Taiyo1"
+var pieceCount = 0
+pieceCount += 15
 ```
 
-Setelah dibuat, `val` tidak boleh diassign ulang.
-
-### 3.2 `var`
-
-`var` adalah variabel mutable.
-
+### 1.3 Deklarasi Tanpa Initializer
+Variabel `var` yang dideklarasikan tanpa nilai awal secara otomatis bernilai `null`.
 ```nexa
-var total = 0
-total += 10
+var operatorName
+// operatorName bernilai null
 ```
 
-### 3.3 Deklarasi tanpa initializer
+---
 
-Jika variabel tidak diberi initializer, nilainya `null`.
+## 🛡️ 2. Operator Null-Safety
 
+Penanganan data `null` sangat krusial dalam otomasi industri untuk mencegah seluruh sistem mogok akibat sensor yang mengirim data kosong.
+
+### 2.1 Safe Navigation (`?.`)
+Mengembalikan `null` secara aman jika objek di sebelah kiri bernilai `null` tanpa melemparkan error.
 ```nexa
-var note
+val speed = msg.payload?.sensorData?.speed
 ```
 
-## 4. Null Safety
-
-### 4.1 Optional Chaining `?.`
-
-Jika target bernilai `null`, hasil akses adalah `null`.
-
+### 2.2 Nullish Coalescing (`??`)
+Mengembalikan nilai cadangan (sisi kanan) jika ekspresi sisi kiri mengevaluasi ke `null`.
 ```nexa
-val speed = msg.payload?.speed
+val activeSpeed = msg.payload?.speed ?? 0
 ```
 
-### 4.2 Null Coalescing `??`
+---
 
-Mengembalikan sisi kanan jika sisi kiri `null`.
+## 🔄 3. Struktur Kontrol & Perulangan
 
+### 3.1 Percabangan `if / else if / else`
+Mengevaluasi ekspresi berdasarkan kondisi boolean.
 ```nexa
-val speed = msg.payload?.speed ?? 0
-```
+val temp = (msg.payload?.temperature ?? 0).toNumber()
 
-### 4.3 Kombinasi umum
-
-```nexa
-val speed = (msg.payload?.speed ?? "0").toNumber()
-```
-
-## 5. Nilai Primitive
-
-### 5.1 Number
-
-Contoh:
-
-```nexa
-val count = 10
-val ratio = 12.5
-```
-
-### 5.2 Boolean
-
-```nexa
-val enabled = true
-```
-
-### 5.3 String
-
-```nexa
-val machine = "Taiyo1"
-```
-
-### 5.4 Null
-
-```nexa
-val empty = null
-```
-
-## 6. Object
-
-### 6.1 Object Literal
-
-```nexa
-val payload = {
-    machine: "Taiyo1",
-    status: "RUN",
-    count: 10
-}
-```
-
-### 6.2 Property Access
-
-```nexa
-val status = payload.status
-```
-
-### 6.3 Property Assignment
-
-```nexa
-payload.status = "STOP"
-```
-
-### 6.4 Missing Property
-
-Jika property tidak ada:
-
-```nexa
-val value = payload.unknown
-```
-
-hasilnya `null`.
-
-### 6.5 Nested Property
-
-```nexa
-msg.payload = {
-    machine: {
-        name: "Taiyo1"
-    }
-}
-
-msg.payload.machine.name = "Taiyo-A"
-```
-
-Catatan:
-
-- parent object harus sudah ada
-- runtime belum membuat nested object otomatis saat chain assignment
-
-## 7. Array
-
-### 7.1 Array Literal
-
-```nexa
-val values = [1, 2, 3]
-```
-
-### 7.2 Index Access
-
-```nexa
-val first = values[0]
-```
-
-### 7.3 Index Assignment
-
-```nexa
-values[1] = 99
-```
-
-### 7.4 Out of Range
-
-Jika index di luar batas saat baca:
-
-- hasil `null`
-
-Jika index di luar batas saat assign:
-
-- runtime error
-
-## 8. Operator
-
-### 8.1 Arithmetic Operator
-
-- `+`
-- `-`
-- `*`
-- `/`
-- `%`
-
-```nexa
-val total = 10 + 5 * 2
-```
-
-### 8.2 Comparison Operator
-
-- `==`
-- `!=`
-- `>`
-- `>=`
-- `<`
-- `<=`
-
-```nexa
-if (speed >= 100) {
-    send("fast", msg)
-}
-```
-
-### 8.3 Logical Operator
-
-- `&&`
-- `||`
-- `!`
-
-### 8.4 Assignment Operator
-
-- `=`
-- `+=`
-- `-=`
-- `*=`
-- `/=`
-
-## 9. Control Flow
-
-### 9.1 if / else if / else
-
-```nexa
-if (speed > 120) {
-    msg.payload.level = "high"
-} else if (speed > 80) {
-    msg.payload.level = "medium"
+if (temp > 100) {
+    msg.payload.status = "OVERHEAT"
+} else if (temp > 80) {
+    msg.payload.status = "WARNING"
 } else {
-    msg.payload.level = "low"
+    msg.payload.status = "NORMAL"
 }
 ```
 
-Catatan:
-
-- tidak ada keyword `elseif`
-- gunakan `else if`
-
-### 9.2 switch
-
-Contoh:
-
+### 3.2 Switch Statement (`switch`)
+Mencocokkan nilai ekspresi ke dalam case. Berbeda dengan Java/C, switch di Nexa DSL **tidak memerlukan keyword `break`** dan **tidak memiliki perilaku fallthrough** (hanya mengeksekusi case pertama yang cocok).
 ```nexa
-switch (msg.payload?.state ?? "-") {
-    case "run":
-        msg.payload.label = "Running"
-    case "idle":
-        msg.payload.label = "Idle"
+val mode = msg.payload?.mode ?? "manual"
+var state = 0
+
+switch (mode) {
+    case "setup":
+        state = 1
+    case "auto":
+        state = 2
     default:
-        msg.payload.label = "Unknown"
+        state = 0
 }
 ```
 
-Perilaku `switch` di Nexa:
-
-- hanya menjalankan case pertama yang match
-- tidak ada fallthrough
-- tidak butuh `break`
-- `default` opsional
-
-### 9.3 for
-
-V1 hanya mendukung bentuk klasik:
-
+### 3.3 For Perulangan Klasik (`for`)
+Mendukung iterasi perulangan bertipe angka:
 ```nexa
 var total = 0
-for (var index = 0; index < 5; index += 1) {
-    total += index
+for (var i = 0; i < 5; i += 1) {
+    total += i
 }
 ```
 
-Belum tersedia:
+---
 
-- `while`
-- `for in`
-- `for of`
+## ⚡ 4. Fungsi & Lambda (First-Class Citizens)
 
-### 9.4 return
+Fungsi di Nexa DSL adalah objek kelas utama (*first-class values*) yang dapat disimpan di variabel, dikirim sebagai argumen, atau dikembalikan dari fungsi lain.
 
-Menghentikan function atau script.
+### 4.1 Named Function
+* **Bentuk Expression Body (Short-hand)**:
+  ```nexa
+  fun square(x) => x * x
+  ```
+* **Bentuk Block Body**:
+  ```nexa
+  fun calculateYield(good, total) {
+      if (total == 0) {
+          return 0
+      }
+      return (good / total) * 100
+  }
+  ```
 
+### 4.2 Lambda & Closure
+Fungsi anonim (lambda) dapat menangkap variabel dari cakupan (*scope*) luar:
 ```nexa
-if (msg.payload == null) {
-    return
-}
+val multiplier = 5
+val process = fun (val) => val * multiplier
 ```
 
-## 10. Function
-
-Function di Nexa adalah first-class value.
-
-Artinya:
-
-- bisa disimpan ke variabel
-- bisa dipass ke method seperti `map` dan `filter`
-- bisa di-return dari function lain
-
-### 10.1 Function Declaration
-
-Bentuk expression body:
-
-```nexa
-fun square(value) => value * value
-```
-
-Bentuk block body:
-
-```nexa
-fun sum(a, b) {
-    return a + b
-}
-```
-
-### 10.2 Function Expression / Lambda
-
-```nexa
-val doubleIt = fun (value) => value * 2
-```
-
-Block body:
-
-```nexa
-val classify = fun (speed) {
-    if (speed > 100) {
-        return "fast"
-    }
-    return "normal"
-}
-```
-
-### 10.3 Closure
-
-Lambda bisa menangkap variabel luar.
-
-```nexa
-val factor = 3
-val mapper = fun (item) => item * factor
-```
-
-### 10.4 Argumen Function
-
-Aturan saat ini:
-
-- argumen ekstra akan diabaikan
-- parameter yang tidak mendapat nilai akan berisi `null`
-
-Contoh:
-
-```nexa
-fun sample(a, b) {
-    return [a, b]
-}
-
-val value = sample(10)
-```
-
-hasil `b` akan `null`.
-
-## 11. Template String
-
-Gunakan backtick.
-
-```nexa
-val machine = "Taiyo1"
-val text = `Hallo, ${machine}`
-```
-
-Template expression akan dievaluasi sebagai expression Nexa biasa.
-
-## 12. Type Conversion
-
-Method conversion yang tersedia:
-
-- `toString()`
-- `toBool()`
-- `toNumber()`
-- `toDate()`
-- `toDateTime()`
-
-### 12.1 `toString()`
-
-Mengubah value menjadi string.
-
-```nexa
-val text = 120.toString()
-```
-
-### 12.2 `toBool()`
-
-Truthiness rule:
-
-- `null` -> `false`
-- `false` -> `false`
-- `0` -> `false`
-- `""` -> `false`
-- array kosong -> `false`
-- object kosong -> `false`
-- selain itu -> `true`
-
-### 12.3 `toNumber()`
-
-Input yang didukung:
-
-- `Number`
-- `String` numerik
-- `Boolean`
-
-Contoh:
-
-```nexa
-val speed = "1500".toNumber()
-```
-
-Jika string bukan angka valid, runtime error.
-
-### 12.4 `toDate()`
-
-Input yang didukung:
-
-- ISO date string, contoh `2026-07-12`
-- ISO datetime string, contoh `2026-07-12T10:15:30Z`
-- `DateTime`
-- `Date`
-
-### 12.5 `toDateTime()`
-
-Input yang didukung:
-
-- ISO datetime string
-- `Date`
-- `DateTime`
-
-## 13. String
-
-String method yang tersedia:
-
-- `length`
-- `trim()`
-- `replace(from, to)`
-- `replaceAll(pattern, replacement)`
-- `split(separator)`
-- `startsWith(value)`
-- `endsWith(value)`
-- `includes(value)`
-- `substring(start, end?)`
-- `slice(start, end?)`
-- `toUpperCase()`
-- `toLowerCase()`
-- `match(pattern)`
-
-### 13.1 `length`
-
-Mengembalikan panjang string.
-
-```nexa
-val size = "Taiyo".length
-```
-
-### 13.2 `trim()`
-
-Menghapus spasi awal dan akhir.
-
-```nexa
-val value = "  abc  ".trim()
-```
-
-### 13.3 `replace(from, to)`
-
-Mengganti literal string.
-
-```nexa
-val value = "A-100".replace("-", "_")
-```
-
-### 13.4 `replaceAll(pattern, replacement)`
-
-Mengganti memakai regex Java.
-
-```nexa
-val value = "A   B".replaceAll("\\s+", "-")
-```
-
-### 13.5 `split(separator)`
-
-```nexa
-val parts = "Setup/1".split("/")
-```
-
-Hasilnya array string.
-
-### 13.6 `startsWith(value)`
-
-```nexa
-val ok = "WO-100".startsWith("WO-")
-```
-
-### 13.7 `endsWith(value)`
-
-```nexa
-val ok = "report.json".endsWith(".json")
-```
-
-### 13.8 `includes(value)`
-
-```nexa
-val ok = "Production".includes("duct")
-```
-
-### 13.9 `substring(start, end?)`
-
-Mengambil bagian string dari index `start` sampai sebelum `end`.
-
-```nexa
-val part = "Taiyo".substring(0, 3)
-```
-
-### 13.10 `slice(start, end?)`
-
-Mirip `substring`, tetapi mendukung index negatif.
-
-```nexa
-val tail = "Taiyo".slice(-2)
-```
-
-### 13.11 `toUpperCase()`
-
-### 13.12 `toLowerCase()`
-
-### 13.13 `match(pattern)`
-
-Mengembalikan array hasil match regex.
-
-```nexa
-val matches = "WO-100-A".match("[A-Z]+")
-```
-
-## 14. Array Method
-
-Array method yang tersedia:
-
-- `length`
-- `push(...items)`
-- `pop()`
-- `shift()`
-- `unshift(...items)`
-- `slice(start, end?)`
-- `splice(start, deleteCount?, ...items)`
-- `includes(value)`
-- `indexOf(value)`
-- `join(separator?)`
-- `map(callback)`
-- `filter(callback)`
-- `reduce(callback, initialValue?)`
-- `forEach(callback)`
-- `find(callback)`
-- `some(callback)`
-- `every(callback)`
-
-### 14.1 `length`
-
-Mengembalikan jumlah item.
-
-```nexa
-val size = values.length
-```
-
-### 14.2 `push(...items)`
-
-Menambah item ke akhir array.
-
-Return:
-
-- panjang array baru
-
-```nexa
-var values = [1, 2]
-values.push(3, 4)
-```
-
-### 14.3 `pop()`
-
-Menghapus item terakhir.
-
-Return:
-
-- item yang dihapus
-- `null` jika array kosong
-
-### 14.4 `shift()`
-
-Menghapus item pertama.
-
-Return:
-
-- item yang dihapus
-- `null` jika array kosong
-
-### 14.5 `unshift(...items)`
-
-Menambah item ke depan array.
-
-Return:
-
-- panjang array baru
-
-### 14.6 `slice(start, end?)`
-
-Mengembalikan array baru.
-
-Mendukung index negatif.
-
-```nexa
-val values = [1, 2, 3, 4]
-val tail = values.slice(-2)
-```
-
-### 14.7 `splice(start, deleteCount?, ...items)`
-
-Mengubah array asli.
-
-Return:
-
-- array item yang dihapus
-
-```nexa
-var values = [1, 2, 3, 4]
-val removed = values.splice(1, 2, 9, 10)
-```
-
-Hasil:
-
-- `values` menjadi `[1, 9, 10, 4]`
-- `removed` menjadi `[2, 3]`
-
-### 14.8 `includes(value)`
-
-```nexa
-val ok = [1, 2, 3].includes(2)
-```
-
-### 14.9 `indexOf(value)`
-
-Return index pertama, atau `-1` jika tidak ditemukan.
-
-### 14.10 `join(separator?)`
-
-Menggabungkan elemen array menjadi string.
-
-Default separator adalah `,`.
-
-```nexa
-val text = [1, 2, 3].join("-")
-```
-
-### 14.11 `map(callback)`
-
-Mengembalikan array baru hasil transformasi.
-
-Signature callback:
-
-```nexa
-fun (item, index, array) => ...
-```
-
-Contoh:
-
-```nexa
-val doubled = [1, 2, 3].map(fun (item) => item * 2)
-```
-
-### 14.12 `filter(callback)`
-
-Mengembalikan array baru berisi item yang callback-nya truthy.
-
-```nexa
-val active = [0, 1, 2, 3].filter(fun (item) => item > 1)
-```
-
-### 14.13 `reduce(callback, initialValue?)`
-
-Menggabungkan array menjadi satu nilai.
-
-Signature callback:
-
-```nexa
-fun (accumulator, item, index, array) => ...
-```
-
-```nexa
-val total = [10, 20, 30].reduce(fun (acc, item) => acc + item, 0)
-```
-
-Catatan:
-
-- jika array kosong dan tidak ada `initialValue`, runtime error
-
-### 14.14 `forEach(callback)`
-
-Menjalankan callback per item.
-
-Return:
-
-- `null`
-
-```nexa
-var trace = []
-[1, 2, 3].forEach(fun (item, index) {
-    trace.push(`${index}:${item}`)
-})
-```
-
-### 14.15 `find(callback)`
-
-Mengembalikan item pertama yang match, atau `null`.
-
-### 14.16 `some(callback)`
-
-Mengembalikan `true` jika minimal satu item match.
-
-### 14.17 `every(callback)`
-
-Mengembalikan `true` jika semua item match.
-
-## 15. Json
-
-Built-in `Json` menyediakan:
-
-- `Json.parse(text)`
-- `Json.stringify(value)`
-
-### 15.1 `Json.parse(text)`
-
-Mengubah text JSON menjadi object/array runtime.
-
-```nexa
-val parsed = Json.parse("{\"items\":[1,2,3]}")
-```
-
-### 15.2 `Json.stringify(value)`
-
-Mengubah value menjadi text JSON.
-
-```nexa
-val text = Json.stringify({ ok: true, count: 10 })
-```
-
-## 16. Math
-
-Built-in `Math` menyediakan:
-
-- `Math.abs(x)`
-- `Math.round(x)`
-- `Math.floor(x)`
-- `Math.ceil(x)`
-- `Math.max(a, b, ...)`
-- `Math.min(a, b, ...)`
-- `Math.random()`
-- `Math.sin(x)`
-- `Math.cos(x)`
-- `Math.sqrt(x)`
-- `Math.pow(a, b)`
-- `Math.log(x)`
-
-### 16.1 `Math.abs(x)`
-
-### 16.2 `Math.round(x)`
-
-Return dibulatkan ke integer terdekat.
-
-### 16.3 `Math.floor(x)`
-
-### 16.4 `Math.ceil(x)`
-
-### 16.5 `Math.max(a, b, ...)`
-
-### 16.6 `Math.min(a, b, ...)`
-
-### 16.7 `Math.random()`
-
-Return number acak antara `0` dan `1`.
-
-### 16.8 `Math.sin(x)`
-
-### 16.9 `Math.cos(x)`
-
-### 16.10 `Math.sqrt(x)`
-
-### 16.11 `Math.pow(a, b)`
-
-### 16.12 `Math.log(x)`
-
-Contoh:
-
-```nexa
-val safe = Math.max(0, -10)
-val rounded = Math.round(10.6)
-```
-
-## 17. Date dan DateTime
-
-### 17.1 `DateTime.now()`
-
-Menghasilkan runtime `DateTime`.
-
-```nexa
-val now = DateTime.now()
-```
-
-### 17.2 `toISOString()`
-
-Tersedia untuk:
-
-- `Date`
-- `DateTime`
-
-```nexa
-val isoDate = "2026-07-12".toDate().toISOString()
-val isoDateTime = DateTime.now().toISOString()
-```
-
-### 17.3 Catatan
-
-Yang belum ada:
-
-- arithmetic date
-- timezone conversion API
-- date diff
-- date formatting custom
-
-## 18. Regex
-
-Built-in `Regex` menyediakan:
-
-- `Regex.match(text, pattern)`
-- `Regex.replace(text, pattern, replacement)`
-
-String juga menyediakan:
-
-- `string.match(pattern)`
-
-### 18.1 `Regex.match(text, pattern)`
-
-Mengembalikan array hasil match.
-
-### 18.2 `Regex.replace(text, pattern, replacement)`
-
-Mengganti memakai regex Java.
-
-### 18.3 `string.match(pattern)`
-
-Shortcut untuk match dari string instance.
-
-Contoh:
-
-```nexa
-val matches = Regex.match("A-100", "[A-Z]")
-val replaced = Regex.replace("A-100", "-", "_")
-val local = "WO-100-A".match("[A-Z]+")
-```
-
-Catatan:
-
-- regex literal seperti `/abc/g` belum ada
-
-## 19. msg
-
-`msg` adalah object mutable utama untuk input/output script.
-
-Contoh:
-
-```nexa
-msg.payload = {
-    branch: "ok",
-    count: 1
-}
-
-send(msg)
-```
-
-Nested update jika parent sudah ada:
-
-```nexa
-msg.payload.count = msg.payload.count + 1
-```
-
-## 20. send
-
-`send` adalah built-in function untuk emit message ke output port.
-
-Bentuk yang tersedia:
-
-```nexa
-send(msg)
-send("default", msg)
-send("success", msg)
-send(["success", "audit"], msg)
-```
-
-Aturan:
-
-- message harus object
-- target port bisa string atau array string
-
-## 21. Host Extension dari Java
-
-Runtime bisa menerima global baru dari Java / JAR.
-
-Model saat ini:
-
-- tidak memakai syntax `import`
-- feature host diinjeksi sebagai global object
-
-Kontrak integrasi:
-
-1. implement `NexaRuntimeExtension`
-2. return global namespace lewat `globals()`
-3. namespace object implement `NexaHostObject`
-4. method return `NexaRuntime.NexaCallable` atau object/namespace lain
-5. register lewat `META-INF/services`
-
-Contoh concept:
-
+---
+
+## 📦 5. Pustaka Standar Bawaan (Built-in Standard Library)
+
+### 5.1 Math
+Menyediakan operasi matematika standar:
+* `Math.abs(x)`, `Math.round(x)`, `Math.floor(x)`, `Math.ceil(x)`
+* `Math.max(a, b, ...)`, `Math.min(a, b, ...)`
+* `Math.random()` (mengembalikan nilai antara `0` dan `1`)
+* `Math.sqrt(x)`, `Math.pow(a, b)`, `Math.log(x)`
+* `Math.sin(x)`, `Math.cos(x)`
+
+### 5.2 DateTime
+Menyediakan fungsionalitas waktu:
+* `DateTime.now()`: Mengembalikan objek waktu saat ini.
+* `.toISOString()`: Mengonversi `Date` atau `DateTime` menjadi format string ISO-8601 UTC.
+* `.toDate()`: Mengonversi string tanggal menjadi objek `Date`.
+
+### 5.3 Json
+* `Json.parse(text)`: Mengubah teks JSON menjadi Array atau Object Nexa.
+* `Json.stringify(value)`: Mengubah objek/array menjadi teks string JSON.
+
+### 5.4 Regex
+* `Regex.match(text, pattern)`: Mengembalikan array hasil pencocokan.
+* `Regex.replace(text, pattern, replacement)`: Mengganti substring menggunakan Java Regex.
+
+---
+
+## 📇 6. Manipulasi String & Array
+
+Setiap instance String dan Array menyediakan metode bawaan yang kaya:
+
+### 6.1 String Methods
+| Metode | Deskripsi | Contoh |
+| :--- | :--- | :--- |
+| `length` | Properti panjang karakter string. | `"taiyo".length` (hasil: 5) |
+| `trim()` | Menghapus spasi di awal/akhir string. | `"  ab ".trim()` (hasil: `"ab"`) |
+| `toUpperCase()` | Mengubah ke huruf kapital semua. | `"ab".toUpperCase()` (hasil: `"AB"`) |
+| `toLowerCase()` | Mengubah ke huruf kecil semua. | `"AB".toLowerCase()` (hasil: `"ab"`) |
+| `startsWith(val)` | Memeriksa kecocokan awal string. | `"WO-1".startsWith("WO-")` (hasil: `true`) |
+| `endsWith(val)` | Memeriksa kecocokan akhir string. | `"a.json".endsWith(".json")` (hasil: `true`) |
+| `includes(val)` | Memeriksa keberadaan substring. | `"Production".includes("duct")` (hasil: `true`) |
+| `split(sep)` | Memecah string menjadi Array String. | `"A/B".split("/")` (hasil: `["A", "B"]`) |
+| `substring(s, e)` | Mengambil potongan indeks `s` hingga `e`. | `"Taiyo".substring(0, 3)` (hasil: `"Tai"`) |
+
+* **String Interpolation**: String dinamis dapat ditulis dengan backtick (`` ` ``) menggunakan format `${expression}`:
+  ```nexa
+  val count = 10
+  val msgText = `Total item diproses: ${count}`
+  ```
+
+### 6.2 Array Methods
+| Metode | Deskripsi | Contoh |
+| :--- | :--- | :--- |
+| `length` | Properti jumlah elemen array. | `[1, 2].length` (hasil: 2) |
+| `push(item)` | Menambah elemen ke akhir array. | `var a = [1]; a.push(2)` |
+| `pop()` | Menghapus dan mengembalikan elemen terakhir. | `val last = arr.pop()` |
+| `join(sep)` | Menggabungkan elemen menjadi satu string. | `[1, 2].join("-")` (hasil: `"1-2"`) |
+| `map(fun)` | Mentransformasikan setiap elemen array. | `[1, 2].map(fun(x) => x*2)` |
+| `filter(fun)` | Menyaring elemen berdasarkan fungsi filter. | `[1, 2].filter(fun(x) => x > 1)` |
+| `reduce(fun, init)` | Mengurangi array menjadi nilai tunggal. | `[1, 2].reduce(fun(acc, x) => acc+x, 0)` |
+| `forEach(fun)` | Menjalankan fungsi untuk setiap elemen. | `arr.forEach(fun(item) => trace(item))` |
+
+---
+
+## 📡 7. Interaksi dengan Runtime & Port
+
+* **Pesan Utama (`msg`)**: Objek variabel global mutable yang bertindak sebagai input data ke node, dan output data ketika diteruskan. Payload data biasanya diletakkan pada properti `msg.payload`.
+* **Mengirim Pesan (`send`)**: Pemicu untuk mengirimkan pesan ke node downstream.
+  ```nexa
+  send(msg) // Mengirim ke port default ("default")
+  send("high-priority", msg) // Mengirim ke port spesifik
+  send(["port-A", "port-B"], msg) // Mengirim salinan pesan ke banyak port sekaligus
+  ```
+* **Early Exit (`return`)**: Menghentikan eksekusi script saat itu juga.
+  ```nexa
+  if (msg.payload == null) {
+      return // Keluar dari eksekusi node
+  }
+  ```
+
+---
+
+## 🔌 8. Integrasi Java (Host Extensions)
+
+Nexa DSL dapat diekspansi secara dinamis menggunakan plugin kelas Java native melalui Service Loader:
+
+### Langkah 1: Implementasikan `NexaRuntimeExtension` di Java
 ```java
-public final class MesExtension implements NexaRuntimeExtension {
+package my.custom.plugin;
+
+import nexa.framework.runtime.domain.scripting.api.ScriptRuntimeApi;
+import nexa.framework.runtime.domain.scripting.internal.nexa.NexaRuntimeExtension;
+import nexa.framework.runtime.domain.scripting.internal.nexa.NexaHostObject;
+import nexa.framework.runtime.domain.scripting.internal.nexa.NexaRuntime;
+
+import java.util.List;
+import java.util.Map;
+
+public final class CustomMesPlugin implements NexaRuntimeExtension {
     @Override
     public Map<String, Object> globals() {
-        return Map.of("Mes", new MesHostObject());
+        return Map.of("Mes", new NexaHostObject() {
+            // Definisikan method kustom yang bisa dipanggil dari script
+            public Object lookupWorkOrder(List<Object> args, ScriptRuntimeApi api) {
+                String woId = String.valueOf(args.getFirst());
+                // Lakukan query database atau API di sini secara native
+                return Map.of("id", woId, "status", "APPROVED", "targetQty", 500);
+            }
+        });
     }
 }
 ```
 
-Pemakaian di script:
+### Langkah 2: Register di META-INF Resources
+Buat file `META-INF/services/nexa.framework.runtime.domain.scripting.internal.nexa.NexaRuntimeExtension` berisi:
+```text
+my.custom.plugin.CustomMesPlugin
+```
 
+### Langkah 3: Panggil di Nexa DSL
 ```nexa
-val result = Mes.lookupWorkOrder("WO-100")
-msg.payload = result
+val woDetails = Mes.lookupWorkOrder("WO-1004")
+msg.payload.wo = woDetails
 send(msg)
 ```
 
-## 22. Contoh Program
+---
 
-### 22.1 Contoh Dasar
+## 🏭 9. Studi Kasus Skenario Industri (Real-world Use Cases)
 
+### Kasus 1: Penyaringan Sensor Cacat & Alarm Fan-out
+**Skenario**: Membaca sensor temperatur. Jika temperatur di atas batas kritis, picu port `"alarm"` dan hentikan eksekusi flow biasa. Jika normal, kirim ke port `"default"`.
 ```nexa
-var values = [1, 2, 3]
-var total = 0
+val temp = (msg.payload?.temperature ?? 0).toNumber()
 
-for (var index = 0; index < values.length; index += 1) {
-    total += values[index]
+if (temp >= 110) {
+    msg.payload = {
+        alert: true,
+        level: "CRITICAL",
+        value: temp,
+        timestamp: DateTime.now().toISOString(),
+        message: `System overheat detected! Temperature: ${temp} C`
+    }
+    send("alarm", msg)
+    return // Batalkan pengiriman ke jalur reguler
 }
 
-val machine = msg.payload?.machine ?? "unknown"
-val now = DateTime.now().toISOString()
-var status = "IDLE"
+// Jalur normal
+msg.payload.status = "STABLE"
+send(msg)
+```
 
-if (total > 3) {
-    status = "RUN"
+### Kasus 2: Kalkulasi Agregasi Yield & Efisiensi Mesin
+**Skenario**: Menerima array data produksi batch, menyaring batch yang kosong, menghitung total yield produksi bagus, rata-rata, dan rasio efisiensi.
+```nexa
+val batches = msg.payload?.batches ?? []
+
+// 1. Saring batch yang memiliki produksi
+val activeBatches = batches.filter(fun (b) => b.totalCount > 0)
+
+// 2. Hitung total yield bagus menggunakan reduce
+val totalGood = activeBatches.reduce(fun (acc, b) => acc + (b.goodCount ?? 0), 0)
+val totalProduced = activeBatches.reduce(fun (acc, b) => acc + (b.totalCount ?? 0), 0)
+
+// 3. Kalkulasi rasio OEE
+var yieldRatio = 0
+if (totalProduced > 0) {
+    yieldRatio = (totalGood / totalProduced) * 100
 }
 
 msg.payload = {
-    machine: machine,
-    total: total,
-    status: status,
-    createdAt: now,
-    text: `Hallo, ${machine}`
-}
-
-send("default", msg)
-```
-
-### 22.2 Contoh dengan switch
-
-```nexa
-val state = msg.payload?.state ?? "-"
-
-switch (state) {
-    case "run":
-        msg.payload.label = "Running"
-    case "idle":
-        msg.payload.label = "Idle"
-    default:
-        msg.payload.label = "Unknown"
+    batchProcessed: activeBatches.length,
+    yieldGood: totalGood,
+    yieldTotal: totalProduced,
+    efficiencyPercent: Math.round(yieldRatio),
+    timestamp: DateTime.now().toISOString()
 }
 
 send(msg)
 ```
 
-### 22.3 Contoh Function dan Koleksi
-
+### Kasus 3: Parsing Data Modbus String Menjadi JSON
+**Skenario**: Membaca payload mentah dari sensor Modbus berupa string datar berpemisah koma: `"(Taiyo01,RUN,150,85.5)"`, parse isinya dan keluarkan bentuk data bertipe kuat.
 ```nexa
-fun square(value) => value * value
+val rawPayload = msg.payload?.rawData ?? "(Unknown,OFF,0,0.0)"
 
-fun sumAll(values) {
-    return values.reduce(fun (acc, item) => acc + item, 0)
-}
-
-val factor = 3
-val mapper = fun (item) => item * factor
-val values = [1, 2, 3, 4]
-val mapped = values.map(mapper)
-val filtered = mapped.filter(fun (item) => item > 6)
-val total = sumAll(filtered)
+// Bersihkan karakter pembuka kurung
+val cleaned = rawPayload.replace("(", "").replace(")", "")
+val parts = cleaned.split(",")
 
 msg.payload = {
-    mapped: mapped,
-    filtered: filtered,
-    total: total,
-    squared: square(5)
+    machineId: parts[0].trim(),
+    status: parts[1].trim().toUpperCase(),
+    speed: parts[2].trim().toNumber(),
+    efficiency: parts[3].trim().toNumber(),
+    processedAt: DateTime.now().toISOString()
 }
 
 send(msg)
 ```
 
-### 22.4 Contoh Parsing JSON
-
+### Kasus 4: Parsing Kode WorkOrder Menggunakan Regex
+**Skenario**: Membaca string deskripsi alur kerja dan mengekstrak kode WorkOrder berpola `WO-[angka]` menggunakan regex.
 ```nexa
-val source = "{\"items\":[1,2,3],\"name\":\"taiyo\"}"
-val parsed = Json.parse(source)
+val desc = msg.payload?.description ?? "No description available"
+val matches = desc.match("WO-\\d+")
 
-msg.payload = {
-    count: parsed.items.length,
-    upper: parsed.name.toUpperCase()
+if (matches.length > 0) {
+    msg.payload.workOrderId = matches[0]
+    msg.payload.isValid = true
+} else {
+    msg.payload.workOrderId = null
+    msg.payload.isValid = false
 }
 
 send(msg)
 ```
-
-### 22.5 Contoh Filter Array Object
-
-```nexa
-val jobs = [
-    { code: "WO-1", good: 10 },
-    { code: "WO-2", good: 0 },
-    { code: "WO-3", good: 7 }
-]
-
-val now = DateTime.now().toISOString()
-val active = jobs.filter(fun (job) => job.good > 0)
-val labels = active.map(fun (job) => `${job.code}:${job.good}`)
-
-msg.payload = {
-    now,
-    activeCount: active.length,
-    labels: labels
-}
-
-send(msg)
-```
-
-## 23. Ringkasan Gap V1
-
-Yang masih belum ada:
-
-- `asset`
-- `eventSys`
-- `action`
-- `await`
-- `while`
-- `break`
-- `continue`
-- `for in`
-- `for of`
-- class
-- import/module syntax
-- user-defined extension method syntax
-- static type annotation
-- async host call
-
-## 24. Prioritas Lanjutan yang Masuk Akal
-
-Urutan realistis berikutnya:
-
-1. `while`
-2. `break`
-3. `continue`
-4. host API `asset`
-5. host API `eventSys`
-6. host API `action`
-7. async host bridge terbatas
-8. import/module layer di atas host extension
