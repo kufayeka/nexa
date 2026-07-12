@@ -38,22 +38,42 @@ pieceCount += 15
 Variabel `var` yang dideklarasikan tanpa nilai awal secara otomatis bernilai `null`.
 ```nexa
 var operatorName
-// operatorName bernilai null
+// operatorName bernilai nu---
+
+## 💬 2. Komentar (Comments)
+
+Nexa DSL mendukung penulisan komentar seperti Java, Kotlin, atau JavaScript untuk membantu dokumentasi kode flow Anda:
+
+### 2.1 Single-Line Comment (`//`)
+Mengabaikan semua karakter setelah tanda `//` hingga akhir baris.
+```nexa
+// Ini adalah komentar satu baris
+val speed = 100 // Kecepatan default mesin
+```
+
+### 2.2 Multi-Line / Block Comment (`/* ... */`)
+Mengabaikan semua teks di antara pembuka `/*` dan penutup `*/` (bisa beberapa baris).
+```nexa
+/*
+ * Blok komentar ini digunakan untuk menjelaskan 
+ * logika penyaringan sensor di bawah.
+ */
+val temp = msg.payload?.temperature
 ```
 
 ---
 
-## 🛡️ 2. Operator Null-Safety
+## 🛡️ 3. Operator Null-Safety
 
 Penanganan data `null` sangat krusial dalam otomasi industri untuk mencegah seluruh sistem mogok akibat sensor yang mengirim data kosong.
 
-### 2.1 Safe Navigation (`?.`)
+### 3.1 Safe Navigation (`?.`)
 Mengembalikan `null` secara aman jika objek di sebelah kiri bernilai `null` tanpa melemparkan error.
 ```nexa
 val speed = msg.payload?.sensorData?.speed
 ```
 
-### 2.2 Nullish Coalescing (`??`)
+### 3.2 Nullish Coalescing (`??`)
 Mengembalikan nilai cadangan (sisi kanan) jika ekspresi sisi kiri mengevaluasi ke `null`.
 ```nexa
 val activeSpeed = msg.payload?.speed ?? 0
@@ -61,9 +81,9 @@ val activeSpeed = msg.payload?.speed ?? 0
 
 ---
 
-## 🔄 3. Struktur Kontrol & Perulangan
+## 🔄 4. Struktur Kontrol & Perulangan
 
-### 3.1 Percabangan `if / else if / else`
+### 4.1 Percabangan `if / else if / else`
 Mengevaluasi ekspresi berdasarkan kondisi boolean.
 ```nexa
 val temp = (msg.payload?.temperature ?? 0).toNumber()
@@ -77,7 +97,7 @@ if (temp > 100) {
 }
 ```
 
-### 3.2 Switch Statement (`switch`)
+### 4.2 Switch Statement (`switch`)
 Mencocokkan nilai ekspresi ke dalam case. Berbeda dengan Java/C, switch di Nexa DSL **tidak memerlukan keyword `break`** dan **tidak memiliki perilaku fallthrough** (hanya mengeksekusi case pertama yang cocok).
 ```nexa
 val mode = msg.payload?.mode ?? "manual"
@@ -93,7 +113,7 @@ switch (mode) {
 }
 ```
 
-### 3.3 For Perulangan Klasik (`for`)
+### 4.3 For Perulangan Klasik (`for`)
 Mendukung iterasi perulangan bertipe angka:
 ```nexa
 var total = 0
@@ -104,11 +124,11 @@ for (var i = 0; i < 5; i += 1) {
 
 ---
 
-## ⚡ 4. Fungsi & Lambda (First-Class Citizens)
+## ⚡ 5. Fungsi & Lambda (First-Class Citizens)
 
 Fungsi di Nexa DSL adalah objek kelas utama (*first-class values*) yang dapat disimpan di variabel, dikirim sebagai argumen, atau dikembalikan dari fungsi lain.
 
-### 4.1 Named Function
+### 5.1 Named Function
 * **Bentuk Expression Body (Short-hand)**:
   ```nexa
   fun square(x) => x * x
@@ -123,7 +143,7 @@ Fungsi di Nexa DSL adalah objek kelas utama (*first-class values*) yang dapat di
   }
   ```
 
-### 4.2 Lambda & Closure
+### 5.2 Lambda & Closure
 Fungsi anonim (lambda) dapat menangkap variabel dari cakupan (*scope*) luar:
 ```nexa
 val multiplier = 5
@@ -132,9 +152,9 @@ val process = fun (val) => val * multiplier
 
 ---
 
-## 📦 5. Pustaka Standar Bawaan (Built-in Standard Library)
+## 📦 6. Pustaka Standar Bawaan (Built-in Standard Library)
 
-### 5.1 Math
+### 6.1 Math
 Menyediakan operasi matematika standar:
 * `Math.abs(x)`, `Math.round(x)`, `Math.floor(x)`, `Math.ceil(x)`
 * `Math.max(a, b, ...)`, `Math.min(a, b, ...)`
@@ -142,27 +162,27 @@ Menyediakan operasi matematika standar:
 * `Math.sqrt(x)`, `Math.pow(a, b)`, `Math.log(x)`
 * `Math.sin(x)`, `Math.cos(x)`
 
-### 5.2 DateTime
+### 6.2 DateTime
 Menyediakan fungsionalitas waktu:
 * `DateTime.now()`: Mengembalikan objek waktu saat ini.
 * `.toISOString()`: Mengonversi `Date` atau `DateTime` menjadi format string ISO-8601 UTC.
 * `.toDate()`: Mengonversi string tanggal menjadi objek `Date`.
 
-### 5.3 Json
+### 6.3 Json
 * `Json.parse(text)`: Mengubah teks JSON menjadi Array atau Object Nexa.
 * `Json.stringify(value)`: Mengubah objek/array menjadi teks string JSON.
 
-### 5.4 Regex
+### 6.4 Regex
 * `Regex.match(text, pattern)`: Mengembalikan array hasil pencocokan.
 * `Regex.replace(text, pattern, replacement)`: Mengganti substring menggunakan Java Regex.
 
 ---
 
-## 📇 6. Manipulasi String & Array
+## 📇 7. Manipulasi String & Array
 
 Setiap instance String dan Array menyediakan metode bawaan yang kaya:
 
-### 6.1 String Methods
+### 7.1 String Methods
 | Metode | Deskripsi | Contoh |
 | :--- | :--- | :--- |
 | `length` | Properti panjang karakter string. | `"taiyo".length` (hasil: 5) |
@@ -181,7 +201,7 @@ Setiap instance String dan Array menyediakan metode bawaan yang kaya:
   val msgText = `Total item diproses: ${count}`
   ```
 
-### 6.2 Array Methods
+### 7.2 Array Methods
 | Metode | Deskripsi | Contoh |
 | :--- | :--- | :--- |
 | `length` | Properti jumlah elemen array. | `[1, 2].length` (hasil: 2) |
@@ -195,7 +215,7 @@ Setiap instance String dan Array menyediakan metode bawaan yang kaya:
 
 ---
 
-## 📡 7. Interaksi dengan Runtime & Port
+## 📡 8. Interaksi dengan Runtime & Port
 
 * **Pesan Utama (`msg`)**: Objek variabel global mutable yang bertindak sebagai input data ke node, dan output data ketika diteruskan. Payload data biasanya diletakkan pada properti `msg.payload`.
 * **Mengirim Pesan (`send`)**: Pemicu untuk mengirimkan pesan ke node downstream.
@@ -213,7 +233,7 @@ Setiap instance String dan Array menyediakan metode bawaan yang kaya:
 
 ---
 
-## 🔌 8. Integrasi Java (Host Extensions)
+## 🔌 9. Integrasi Java (Host Extensions)
 
 Nexa DSL dapat diekspansi secara dinamis menggunakan plugin kelas Java native melalui Service Loader:
 
@@ -259,7 +279,7 @@ send(msg)
 
 ---
 
-## 🏭 9. Studi Kasus Skenario Industri (Real-world Use Cases)
+## 🏭 10. Studi Kasus Skenario Industri (Real-world Use Cases)
 
 ### Kasus 1: Penyaringan Sensor Cacat & Alarm Fan-out
 **Skenario**: Membaca sensor temperatur. Jika temperatur di atas batas kritis, picu port `"alarm"` dan hentikan eksekusi flow biasa. Jika normal, kirim ke port `"default"`.
@@ -313,7 +333,7 @@ send(msg)
 ```
 
 ### Kasus 3: Parsing Data Modbus String Menjadi JSON
-**Skenario**: Membaca payload mentah dari sensor Modbus berupa string datar berpemisah koma: `"(Taiyo01,RUN,150,85.5)"`, parse isinya dan keluarkan bentuk data bertipe kuat.
+**Skenario**: Menerima payload mentah dari sensor Modbus berupa string datar berpemisah koma: `"(Taiyo01,RUN,150,85.5)"`, parse isinya dan keluarkan bentuk data bertipe kuat.
 ```nexa
 val rawPayload = msg.payload?.rawData ?? "(Unknown,OFF,0,0.0)"
 
