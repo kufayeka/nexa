@@ -36,6 +36,19 @@ tasks.jar {
 tasks.named<Test>("test") {
     useJUnitPlatform()
     minHeapSize = "8m"
-    maxHeapSize = "128m"
+    maxHeapSize = "512m"
     systemProperties(System.getProperties().map { it.key.toString() to it.value }.toMap())
+}
+
+tasks.register<JavaExec>("runStandalone") {
+    group = "application"
+    description = "Runs the Nexa Standalone Runner"
+    mainClass.set("nexa.framework.NexaStandaloneRunner")
+    classpath = sourceSets["main"].runtimeClasspath
+    standardInput = System.`in`
+    workingDir = projectDir
+    systemProperties(System.getProperties().map { it.key.toString() to it.value }.toMap())
+    if (project.hasProperty("appArgs")) {
+        args = (project.property("appArgs") as String).split(" ")
+    }
 }

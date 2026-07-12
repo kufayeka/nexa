@@ -1,12 +1,10 @@
 package nexa.framework.benchmark;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
 import nexa.framework.runtime.api.OutputConsumer;
 import nexa.framework.runtime.api.RuntimeConfiguration;
 import nexa.framework.runtime.api.RuntimeEngine;
 import nexa.framework.runtime.domain.execution.service.DefaultRuntimeEngine;
-import nexa.framework.runtime.domain.execution.model.RuntimeMessage;
 import nexa.framework.runtime.domain.statistics.model.RuntimeStatisticsSnapshot;
 import nexa.framework.runtime.domain.workspace.model.ConnectionDefinition;
 import nexa.framework.runtime.domain.workspace.model.FlowDefinition;
@@ -16,9 +14,9 @@ import nexa.framework.runtime.domain.workspace.model.NodeDefinition;
 import nexa.framework.runtime.domain.workspace.model.WorkspaceDefinition;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -28,114 +26,88 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * SuperConfigurableStressTest merupakan pengujian stres tingkat tinggi yang kompleks.
- * Dapat diatur jumlah flow, nodes per flow, dan fan-out degree via System Properties atau static field.
- * Skrip eksekusi menggunakan 100% fitur dari Nexa DSL V1 (comments, null-safety, array methods, regex, dll.).
+ * TimedStressExecutorTest melakukan simulasi timed inject dari beberapa input node sekaligus
+ * dengan interval hingga milidetik, menyebar (fan-out) ke beberapa node kompleks,
+ * lalu menyatu kembali (fan-in) ke satu node output debug tunggal.
  */
-public final class SuperConfigurableStressTest {
+public final class TimedStressExecutorTest {
 
-    // Konfigurasi stres tes (bisa disetel via System Properties)
-    private static final int FLOW_COUNT = Integer.getInteger("stress.flows", 50);
-    private static final int FANOUT_DEGREE = Integer.getInteger("stress.fanout", 4);
+    private static final int TIMED_INPUT_COUNT = Integer.getInteger("timed.inputs", 4);
+    private static final String INTERVAL_MS = System.getProperty("timed.interval", "50ms");
+    private static final int FANOUT_DEGREE = Integer.getInteger("timed.fanout", 3);
+    private static final int TEST_DURATION_SEC = Integer.getInteger("timed.duration", 4);
 
     @Test
-    public void executeSuperStressTest() throws Exception {
-        int expectedOutputs = FLOW_COUNT * FANOUT_DEGREE;
-        CountDownLatch latch = new CountDownLatch(expectedOutputs);
+    public void executeTimedTest() throws Exception {
         AtomicInteger outputCounter = new AtomicInteger(0);
 
-        // 1. Definisikan Output Consumer untuk menghitung pemrosesan downstream
+        // 1. Output Consumer (Fan-in akhir ke debug-output)
         OutputConsumer outputConsumer = (context, nodeId, message) -> {
             outputCounter.incrementAndGet();
-            latch.countDown();
         };
 
-        // 2. Inisialisasi Runtime Engine (Composition Root)
+        // 2. Setup Runtime Engine
         RuntimeEngine runtime = new DefaultRuntimeEngine(
                 new RuntimeConfiguration(Duration.ofSeconds(15)),
                 outputConsumer
         );
 
-        String workspaceId = "ws-super-stress";
-        
-        System.out.println("[super-stress] Membangun workspace dengan " + FLOW_COUNT + " flows...");
-        long startBuild = System.nanoTime();
-        WorkspaceDefinition workspaceDef = generateSuperStressWorkspace(workspaceId, FLOW_COUNT, FANOUT_DEGREE);
-        long buildDurationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startBuild);
-        System.out.println("[super-stress] Workspace selesai dibangun dalam " + buildDurationMs + " ms.");
+        String workspaceId = "ws-timed-stress";
+        String flowId = "flow-timed-stress";
 
-        // Simpan ke berkas JSON
-        File jsonFile = new File("workspaces/super_stress_workspace.json");
+        System.out.println("[timed-stress] Membangun workspace...");
+        WorkspaceDefinition workspaceDef = generateTimedStressWorkspace(
+                workspaceId, flowId, TIMED_INPUT_COUNT, INTERVAL_MS, FANOUT_DEGREE
+        );
+
+        // Save ke berkas JSON agar bisa dipakai oleh standalone runner
+        File jsonFile = new File("workspaces/timed_stress_workspace.json");
         jsonFile.getParentFile().mkdirs();
         new ObjectMapper().writerWithDefaultPrettyPrinter().writeValue(jsonFile, workspaceDef);
-        System.out.println("[super-stress] Workspace JSON disimpan ke: " + jsonFile.getAbsolutePath());
+        System.out.println("[timed-stress] Workspace JSON disimpan ke: " + jsonFile.getAbsolutePath());
 
-        // 3. Deploy workspace (kompilator akan mengompilasi ratusan skrip secara bersamaan)
-        System.out.println("[super-stress] Memulai kompilasi dan deploy...");
-        long startDeploy = System.nanoTime();
+        // 3. Deploy dan Jalankan
+        System.out.println("[timed-stress] Memulai deploy & compile...");
         runtime.deploy(workspaceDef);
-        long deployDurationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startDeploy);
-        System.out.println("[super-stress] Kompilasi & deploy selesai dalam " + deployDurationMs + " ms.");
-
-        // 4. Aktifkan runtime
+        System.out.println("[timed-stress] Booting runtime engine...");
         runtime.startRuntime();
 
-        // 5. Picu pemicu manual untuk setiap flow secara paralel menggunakan virtual threads
-        System.out.println("[super-stress] Menembakkan trigger manual ke " + FLOW_COUNT + " flows...");
-        long startTrigger = System.nanoTime();
-        
-        Thread[] threads = new Thread[FLOW_COUNT];
-        for (int i = 0; i < FLOW_COUNT; i++) {
-            final String flowId = "flow-" + i;
-            threads[i] = Thread.startVirtualThread(() -> {
-                RuntimeMessage seed = new RuntimeMessage();
-                // Kirim payload mentah untuk di-parse oleh script
-                seed.writeValue("payload.rawData", "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}");
-                runtime.trigger(workspaceId, flowId, "input-manual", seed);
-            });
-        }
+        // 4. Biarkan runtime berjalan untuk durasi waktu yang dikonfigurasi
+        System.out.println("[timed-stress] Menjalankan timed inject selama " + TEST_DURATION_SEC + " detik...");
+        TimeUnit.SECONDS.sleep(TEST_DURATION_SEC);
 
-        // Tunggu semua thread trigger menembak
-        for (Thread thread : threads) {
-            thread.join();
-        }
+        // 5. Hentikan runtime
+        System.out.println("[timed-stress] Menghentikan runtime...");
+        runtime.stopRuntime();
 
-        // 6. Tunggu hingga semua rute fan-out paralel selesai diproses oleh virtual threads
-        boolean finished = latch.await(10, TimeUnit.SECONDS);
-        long triggerDurationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTrigger);
-        
-        System.out.println("[super-stress] Pemrosesan selesai dalam " + triggerDurationMs + " ms.");
-        System.out.println("[super-stress] Total output yang dikonsumsi: " + outputCounter.get() + " / " + expectedOutputs);
-
-        // Pastikan semua output terkirim tanpa ada kebocoran
-        assertTrue(finished, "Stress test timeout! Hanya memproses " + outputCounter.get() + " pesan.");
-        assertTrue(outputCounter.get() >= expectedOutputs);
-
-        // 7. Cek metrik statistik untuk flow pertama untuk memastikan stats dicatat dengan benar
-        RuntimeStatisticsSnapshot stats = runtime.statistics(workspaceId, "flow-0");
-        System.out.println("[super-stress] Statistik flow-0: completed=" + stats.completed()
+        // 6. Tampilkan statistik & verifikasi
+        RuntimeStatisticsSnapshot stats = runtime.statistics(workspaceId, flowId);
+        int totalProcessed = outputCounter.get();
+        System.out.println("[timed-stress] Pengujian Selesai.");
+        System.out.println("[timed-stress] Total Output Terproses (Fan-in): " + totalProcessed);
+        System.out.println("[timed-stress] Statistik flow: completed=" + stats.completed()
                 + " failed=" + stats.failed()
                 + " rejected=" + stats.rejected()
-                + " avgTimeMs=" + stats.averageExecutionTimeMillis());
+                + " running=" + stats.running()
+                + " avgMs=" + stats.averageExecutionTimeMillis());
 
-        runtime.stopRuntime();
+        // Pastikan tidak ada kegagalan error skrip
+        assertTrue(stats.failed() == 0, "Ada skrip yang melempar error runtime!");
+        assertTrue(totalProcessed > 0, "Pesan tidak terkirim atau tidak terproses!");
     }
 
-    private WorkspaceDefinition generateSuperStressWorkspace(String workspaceId, int flowCount, int fanoutDegree) {
-        List<FlowDefinition> flows = new ArrayList<>();
-        
-        // Buat skrip fanout utama untuk merutekan pesan ke port fan-out paralel
-        StringBuilder fanoutScriptBuilder = new StringBuilder();
-        fanoutScriptBuilder.append("send([");
-        for (int i = 0; i < fanoutDegree; i++) {
-            if (i > 0) fanoutScriptBuilder.append(", ");
-            fanoutScriptBuilder.append("\"p").append(i).append("\"");
-        }
-        fanoutScriptBuilder.append("], msg)");
-        String fanoutScript = fanoutScriptBuilder.toString();
+    private WorkspaceDefinition generateTimedStressWorkspace(
+            String workspaceId,
+            String flowId,
+            int timedInputCount,
+            String intervalValue,
+            int fanoutDegree) {
 
-        // Skrip kompleks yang memanfaatkan seluruh fitur Nexa DSL V1
-        String complexProcessingScript = 
+        List<NodeDefinition> nodes = new ArrayList<>();
+        List<ConnectionDefinition> connections = new ArrayList<>();
+
+        // Skrip kompleks yang mencakup 100% fitur Nexa DSL
+        String complexProcessingScript =
                 "// 1. Single-line comment: Memulai kalkulasi sensor batch\n" +
                 "/*\n" +
                 " * 2. Block comment:\n" +
@@ -202,25 +174,51 @@ public final class SuperConfigurableStressTest {
                 "}\n" +
                 "send(msg)";
 
-        for (int index = 0; index < flowCount; index++) {
-            String flowId = "flow-" + index;
-            List<NodeDefinition> nodes = new ArrayList<>();
-            List<ConnectionDefinition> connections = new ArrayList<>();
+        // 1. Output Node Tunggal (Fan-in)
+        String finalOutId = "out-debug";
+        nodes.add(new NodeDefinition(
+                finalOutId,
+                NodeCategory.OUTPUT,
+                "debug-output",
+                null,
+                true,
+                new InputExecutionPolicyDefinition(null),
+                Map.of()
+        ));
 
-            // 1. Input Node
+        // 2. Loop pembuatan multiple timed-trigger inputs
+        for (int i = 0; i < timedInputCount; i++) {
+            String inputId = "input-timed-" + i;
+            String routerId = "exec-router-" + i;
+
+            // Buat Timed Trigger Input Node
             nodes.add(new NodeDefinition(
-                    "input-manual",
+                    inputId,
                     NodeCategory.INPUT,
-                    "manual-input",
+                    "timed-trigger",
                     null,
                     true,
                     new InputExecutionPolicyDefinition(1024),
-                    Map.of()
+                    Map.of(
+                            "interval", intervalValue,
+                            "payload", Map.of(
+                                    "rawData", "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}"
+                            )
+                    )
             ));
 
-            // 2. Routing Executor Node (Fan-out)
+            // Buat Router Node untuk melakukan Fan-out
+            StringBuilder fanoutScriptBuilder = new StringBuilder();
+            fanoutScriptBuilder.append("send([");
+            for (int f = 0; f < fanoutDegree; f++) {
+                if (f > 0) fanoutScriptBuilder.append(", ");
+                fanoutScriptBuilder.append("\"p").append(f).append("\"");
+            }
+            fanoutScriptBuilder.append("], msg)");
+            String fanoutScript = fanoutScriptBuilder.toString();
+
             nodes.add(new NodeDefinition(
-                    "exec-router",
+                    routerId,
                     NodeCategory.EXECUTOR,
                     "script",
                     "nexa",
@@ -229,14 +227,16 @@ public final class SuperConfigurableStressTest {
                     Map.of("script", fanoutScript)
             ));
 
-            connections.add(new ConnectionDefinition("input-manual", "default", "exec-router"));
+            // Hubungkan input ke router
+            connections.add(new ConnectionDefinition(inputId, "default", routerId));
 
-            // 3. Cabang Fan-out (masing-masing mengeksekusi Nexa script kompleks)
+            // Buat cabang fan-out paralel untuk router ini
             for (int f = 0; f < fanoutDegree; f++) {
                 String port = "p" + f;
-                String execId = "exec-complex-" + f;
-                String outId = "out-debug-" + f;
+                String execId = "exec-complex-" + i + "-" + f;
+                String secondStageExecId = "exec-second-" + i + "-" + f;
 
+                // Stage 1: Complex script
                 nodes.add(new NodeDefinition(
                         execId,
                         NodeCategory.EXECUTOR,
@@ -247,23 +247,27 @@ public final class SuperConfigurableStressTest {
                         Map.of("script", complexProcessingScript)
                 ));
 
+                // Stage 2: Melakukan pengolahan lanjutan sederhana
                 nodes.add(new NodeDefinition(
-                        outId,
-                        NodeCategory.OUTPUT,
-                        "debug-output",
-                        null,
+                        secondStageExecId,
+                        NodeCategory.EXECUTOR,
+                        "script",
+                        "nexa",
                         true,
                         new InputExecutionPolicyDefinition(null),
-                        Map.of()
+                        Map.of("script",
+                                "msg.payload.stage2Processed = true\n" +
+                                "send(\"default\", msg)")
                 ));
 
-                connections.add(new ConnectionDefinition("exec-router", port, execId));
-                connections.add(new ConnectionDefinition(execId, "default", outId));
+                // Hubungkan router -> Stage 1 -> Stage 2 -> Fan-in debug output
+                connections.add(new ConnectionDefinition(routerId, port, execId));
+                connections.add(new ConnectionDefinition(execId, "default", secondStageExecId));
+                connections.add(new ConnectionDefinition(secondStageExecId, "default", finalOutId));
             }
-
-            flows.add(new FlowDefinition(flowId, flowId, true, nodes, connections));
         }
 
-        return new WorkspaceDefinition(workspaceId, true, flows);
+        FlowDefinition flow = new FlowDefinition(flowId, flowId, true, nodes, connections);
+        return new WorkspaceDefinition(workspaceId, true, List.of(flow));
     }
 }
