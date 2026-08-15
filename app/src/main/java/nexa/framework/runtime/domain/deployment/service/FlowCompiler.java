@@ -75,7 +75,8 @@ public final class FlowCompiler {
         for (FlowDefinition flowDefinition : definition.flows()) {
             flowIndex++;
             LOGGER.log(System.Logger.Level.INFO, "Kompilasi flow {0}/{1} id={2} nodes={3}",
-                    flowIndex, definition.flows().size(), flowDefinition.id(), flowDefinition.nodes().size());
+                    flowIndex, definition.flows().size(), flowDefinition.id(),
+                    flowDefinition.nodes().size());
 
             String flowSignature = flowSignature(flowDefinition);
             CompiledFlow cachedFlow = resolveCachedFlow(previousSnapshot, flowDefinition.id(), flowSignature);
@@ -329,5 +330,3 @@ public final class FlowCompiler {
         return language;
     }
 }
-
-

@@ -10,9 +10,8 @@ import java.util.Map;
 
 public final class MqttSharedSinkPlugin implements NexaSinkPlugin {
     private MqttClient mqttClient;
-    private String brokerUrl;
+    private String mqttClientPool;
     private String topic;
-    private int keepAlive;
 
     @Override
     public String getPluginType() {
@@ -20,15 +19,26 @@ public final class MqttSharedSinkPlugin implements NexaSinkPlugin {
     }
 
     @Override
-    public void onInit(String targetId, Map<String, Object> config, NexaPluginContext context) throws Exception {
-        this.brokerUrl = (String) config.getOrDefault("brokerUrl", "tcp://localhost:1883");
+    public void onInit(final String targetId, final Map<String, Object> config, final NexaPluginContext context) throws Exception {
+        this.mqttClientPool = (String) config.get("mqttClientPool");
         this.topic = (String) config.getOrDefault("topic", "sensor/processed");
-        this.keepAlive = ((Number) config.getOrDefault("keepAlive", 60)).intValue();
+
+        // Alur Kerja Resolusi Client:
+        // 1. Coba cari client dari NexaPluginContext menggunakan ID resource
+        Object clientObj = context.getSharedResource(this.mqttClientPool);
+        if (clientObj instanceof MqttClient client) {
+            this.mqttClient = client;
+        } else {
+            // 2. Jika tidak ditemukan (misal di-refer menggunakan nama pool), cari dari registry lokal
+            this.mqttClient = MqttBrokerManager.getClientByNameOrId(this.mqttClientPool);
+        }
     }
 
     @Override
     public void onStart() throws Exception {
-        this.mqttClient = MqttBrokerManager.getOrCreateClient(this.brokerUrl, this.keepAlive);
+        if (this.mqttClient == null) {
+            throw new IllegalStateException("Mqtt Client Pool tidak ditemukan atau belum terinisialisasi: " + this.mqttClientPool);
+        }
     }
 
     @Override
@@ -39,9 +49,16 @@ public final class MqttSharedSinkPlugin implements NexaSinkPlugin {
 
             MqttMessage mqttMessage = new MqttMessage(rawPayload.toString().getBytes());
             mqttMessage.setQos(1);
-            this.mqttClient.publish(this.topic, mqttMessage);
+            
+            // Only publish if client is active and connected
+            if (this.mqttClient != null && this.mqttClient.isConnected()) {
+                this.mqttClient.publish(this.topic, mqttMessage);
+            }
         } catch (Exception e) {
-            System.err.println("[MQTT Sink Error] Gagal mempublikasikan data: " + e.getMessage());
+            // Suppress printing errors if the client got disconnected/closed during shutdown
+            if (this.mqttClient != null && this.mqttClient.isConnected()) {
+                System.err.println("[MQTT Sink Error] Gagal mempublikasikan data: " + e.getMessage());
+            }
         }
     }
 

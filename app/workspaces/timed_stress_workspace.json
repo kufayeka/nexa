@@ -26,10 +26,10 @@
         "maxConcurrentExecutions" : 1024
       },
       "config" : {
-        "interval" : "50ms",
         "payload" : {
           "rawData" : "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}"
-        }
+        },
+        "interval" : "50ms"
       }
     }, {
       "id" : "exec-router-0",
@@ -125,10 +125,10 @@
         "maxConcurrentExecutions" : 1024
       },
       "config" : {
-        "interval" : "50ms",
         "payload" : {
           "rawData" : "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}"
-        }
+        },
+        "interval" : "50ms"
       }
     }, {
       "id" : "exec-router-1",
@@ -224,10 +224,10 @@
         "maxConcurrentExecutions" : 1024
       },
       "config" : {
-        "interval" : "50ms",
         "payload" : {
           "rawData" : "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}"
-        }
+        },
+        "interval" : "50ms"
       }
     }, {
       "id" : "exec-router-2",
@@ -323,10 +323,10 @@
         "maxConcurrentExecutions" : 1024
       },
       "config" : {
-        "interval" : "50ms",
         "payload" : {
           "rawData" : "{\"speed\":150,\"temp\":105.2,\"batches\":[5,15,25,35],\"name\":\"  WO-9988-B  \"}"
-        }
+        },
+        "interval" : "50ms"
       }
     }, {
       "id" : "exec-router-3",
